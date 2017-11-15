@@ -133,14 +133,15 @@ class Fit_Bayes(object):
 		samples = np.zeros(niters+1)
 		samples[0]=gamma
 		for i in range(niters):
-		    gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
-		    
-		    a=(self.target(gamma_p)/self.target(gamma))*(gamma_p/gamma)
-		    if a>=1:
-		        naccept += 1
-		        gamma = gamma_p
-		    
-		    samples[i+1]=gamma
+			gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
+			if self.target(gamma)==0:
+				a=np.infty
+			else:
+				a=(self.target(gamma_p)/self.target(gamma))*(gamma_p/gamma)
+			if a>=1:
+				naccept += 1
+				gamma = gamma_p
+			samples[i+1]=gamma
 		return samples
 
 
