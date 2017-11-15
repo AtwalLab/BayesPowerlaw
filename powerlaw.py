@@ -1,7 +1,9 @@
 from __future__ import division
 from scipy.optimize import newton
 from scipy.special import zeta
+import scipy as sp
 import numpy as np
+from scipy.stats import uniform
 
 
 def power_law(exponent, xmax, sample_size, discrete=True):
@@ -31,7 +33,7 @@ def power_law(exponent, xmax, sample_size, discrete=True):
 
 class Fit(object):
 
-	def __init__(self, data, initial_guess=None, xmin=1, xmax=np.infty, discrete=True):
+	def __init__(self, data, initial_guess=np.linspace(1,5,10), xmin=1, xmax=np.infty, discrete=True):
 		self.data=data
 		self.n=len(data)
 		self.constant=np.sum(np.log(data))/self.n
@@ -73,9 +75,87 @@ class Fit(object):
 		best_guess=best_guess[best_guess!=0]
 		log_likelihood=np.zeros(len(best_guess))
 		for i in range(len(best_guess)):
-			log_likelihood[i]=-self.n*np.log(self.Z(best_guess[i]))-best_guess[i]*np.sum(np.log(data))
+			log_likelihood[i]=-self.n*np.log(self.Z(best_guess[i]))-best_guess[i]*np.sum(np.log(self.data))
 		self.log_likelihood=log_likelihood
 		return best_guess[np.where(log_likelihood==max(log_likelihood))]
 
 	def Guess_continuous(self):
 		return 1+self.n/(np.sum(np.log(self.data))-self.n*np.log(self.xmin))
+
+class Fit_Bayes(object):
+	def __init__(self, data, gamma_range=[1,5], xmin=1, xmax=np.infty, discrete=True):
+		self.data=data
+		self.n=len(data)
+		self.constant=np.sum(np.log(data))/self.n
+		self.range=gamma_range
+		self.xmin=xmin
+		self.xmax=xmax
+		self.discrete=discrete
+		self.gammas=np.linspace(1.01,gamma_range[1]*2, 10000)
+		self.log_likelihood= np.array([-self.n*np.log(self.Z(j))-j*np.sum(np.log(self.data)) for j in self.gammas])
+		self.likelihood=np.exp(self.log_likelihood-max(self.log_likelihood))
+		self.prior=(sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(self.gammas)
+		self.samples=self.posterior()
+
+
+
+	def pri(self,gamma):
+		return (sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(gamma)
+
+	def Z(self,gamma,xmin=1,xmax=np.infty):
+	    """The normalization function Z.
+	    Note that default arguments of xmin and xmax make Z equivalent to Riemann zeta function which is already
+	    implemented in Scipy as zeta(gamma,1)"""
+	    if np.isfinite(xmax):
+	        s=0
+	        for i in xrange(xmin,xmax+1):
+	            s+=(1/(i**gamma))
+	    else:
+	        s=zeta(gamma,xmin)
+	    return s
+
+	def l(self,gamma):
+	    return np.exp((-len(self.data)*np.log(self.Z(gamma))-gamma*np.sum(np.log(self.data)))-max(self.log_likelihood))
+
+
+	def target (self, gamma):
+	    if gamma <= 1 or gamma >5:
+	        return 0
+	    else:
+	        return self.l(gamma)*self.pri(gamma)
+
+	
+	def posterior (self):
+		sigma = 0.6
+		naccept=0
+		gamma=1.01
+		niters=5000
+		samples = np.zeros(niters+1)
+		samples[0]=gamma
+		for i in range(niters):
+		    gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
+		    
+		    a=(self.target(gamma_p)/self.target(gamma))*(gamma_p/gamma)
+		    if a>=1:
+		        naccept += 1
+		        gamma = gamma_p
+		    
+		    samples[i+1]=gamma
+		return samples
+
+
+
+exponent=3.0
+xmax=100
+sample_size=1000
+#initial_guess=np.linspace(1,5,10)
+
+data=power_law(exponent, xmax, sample_size)
+
+test = Fit_Bayes(data)
+
+print test.samples
+
+print max(test.samples)
+
+
