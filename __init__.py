@@ -1,1 +1,1 @@
-from potoroo import powerlaw
+from Fit_powerlaw import powerlaw
