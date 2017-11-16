@@ -126,12 +126,25 @@ class Fit_Bayes(object):
 
 	
 	def posterior (self):
-		sigma = 0.6
+		sigma = 1.0
 		naccept=0
 		gamma=1.01
+		burn_in=100
 		niters=5000
+		#perform a burn in first without recording gamma values
+		for i in range(burn_in+1):
+			gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
+			if self.target(gamma)==0:
+				a=np.infty
+			else:
+				a=(self.target(gamma_p)/self.target(gamma))*(gamma_p/gamma)
+			if a>=1:
+				naccept += 1
+				gamma = gamma_p	
+		#now perform the rest of the sampling while recording gamma values
 		samples = np.zeros(niters+1)
 		samples[0]=gamma
+		sigma=0.8
 		for i in range(niters):
 			gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
 			if self.target(gamma)==0:
@@ -142,13 +155,14 @@ class Fit_Bayes(object):
 				naccept += 1
 				gamma = gamma_p
 			samples[i+1]=gamma
+
 		return samples
 
 
 
 exponent=3.0
 xmax=100
-sample_size=1000
+sample_size=100
 #initial_guess=np.linspace(1,5,10)
 
 data=power_law(exponent, xmax, sample_size)
@@ -157,6 +171,7 @@ test = Fit_Bayes(data)
 
 print test.samples
 
-print max(test.samples)
+print np.mean(test.samples)
+print np.std(test.samples)
 
 
