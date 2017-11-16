@@ -138,7 +138,7 @@ class Fit_Bayes(object):
 				a=np.infty
 			else:
 				a=(self.target(gamma_p)/self.target(gamma))*(gamma_p/gamma)
-			if a>=1:
+			if a>=1 and gamma_p>1:
 				naccept += 1
 				gamma = gamma_p	
 		#now perform the rest of the sampling while recording gamma values
@@ -151,7 +151,7 @@ class Fit_Bayes(object):
 				a=np.infty
 			else:
 				a=(self.target(gamma_p)/self.target(gamma))*(gamma_p/gamma)
-			if a>=1:
+			if a>=1 and gamma_p>1:
 				naccept += 1
 				gamma = gamma_p
 			samples[i+1]=gamma
@@ -160,18 +160,18 @@ class Fit_Bayes(object):
 
 
 
-exponent=3.0
-xmax=100
-sample_size=100
-#initial_guess=np.linspace(1,5,10)
+# exponent=3.0
+# xmax=100
+# sample_size=100
+# #initial_guess=np.linspace(1,5,10)
 
-data=power_law(exponent, xmax, sample_size)
+# data=power_law(exponent, xmax, sample_size)
 
-test = Fit_Bayes(data)
+# test = Fit_Bayes(data)
 
-print test.samples
+# print test.samples
 
-print np.mean(test.samples)
-print np.std(test.samples)
+# print np.mean(test.samples)
+# print np.std(test.samples)
 
 
