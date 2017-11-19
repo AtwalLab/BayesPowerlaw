@@ -114,9 +114,10 @@ class Fit_Bayes(object):
 
 	def l(self,gamma):
 		if self.discrete==True:
-			return np.exp((-self.n*np.log(self.Z(gamma))-gamma*np.sum(np.log(self.data)))-max(self.log_likelihood))
+			lik = np.exp((-self.n*np.log(self.Z(gamma))-gamma*np.sum(np.log(self.data)))-max(self.log_likelihood))
 		else:
-			return np.prod((self.data**-gamma)*(1-gamma))
+			lik= np.prod((self.data**-gamma)*(1-gamma))
+		return lik
 
 
 	def target (self, gamma):
@@ -144,8 +145,8 @@ class Fit_Bayes(object):
 		#now perform the rest of the sampling while recording gamma values
 		samples = np.zeros(niters+1)
 		samples[0]=gamma
-		sigma=2.0
-		for i in range(niters):
+		sigma=0.8
+		for i in range(1,niters+1):
 			gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
 			if self.target(gamma) == 0:
 				a = np.infty
@@ -153,15 +154,15 @@ class Fit_Bayes(object):
 				a = (self.target(gamma_p) / self.target(gamma)) * (gamma_p / gamma)
 			if a >= 1 and gamma_p > 1:
 				gamma = gamma_p
-			samples[i+1]=gamma
+			samples[i]=gamma
 			
-			# if i%100==0 and i>0:
-			# 	mean=np.mean(samples[i+1- 100:i + 1])
-			# 	std=np.std(samples[i + 1 - 100:i + 1])
-			# 	if gamma < (mean + std) and gamma > (mean - std):
-			# 		sigma+=0.2
-			
-			# self.sigma=sigm
+			if i%200==0:
+				mean=np.mean(samples[i - 200:i])
+				std=np.std(samples[i - 200:i])
+				if np.mean(samples[i - 100:i]) < (mean + std) and np.mean(samples[i - 100:i]) > (mean - std):
+					sigma+=0.2
+
+			self.sigma=sigma
 
 		return samples
 
@@ -172,14 +173,12 @@ xmax=100
 sample_size=1000
 #initial_guess=np.linspace(1,5,10)
 
-data=power_law(exponent, xmax, sample_size, discrete=False)
+data=power_law(exponent, xmax, sample_size)
 
-test = Fit_Bayes(data, discrete=False)
+test = Fit_Bayes(data)
 
 print (test.samples)
 
 print (np.mean(test.samples))
 print (np.std(test.samples))
-
-
-
+print (test.sigma)
