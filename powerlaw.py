@@ -1,4 +1,3 @@
-from __future__ import division
 from scipy.optimize import newton
 from scipy.special import zeta
 import scipy as sp
@@ -92,12 +91,11 @@ class Fit_Bayes(object):
 		self.xmax=xmax
 		self.discrete=discrete
 		self.gammas=np.linspace(1.01,gamma_range[1]*2, 10000)
-		self.log_likelihood= np.array([-self.n*np.log(self.Z(j))-j*np.sum(np.log(self.data)) for j in self.gammas])
-		self.likelihood=np.exp(self.log_likelihood-max(self.log_likelihood))
+		if self.discrete==True:
+			self.log_likelihood=np.array([-self.n*np.log(self.Z(j))-j*np.sum(np.log(self.data)) for j in self.gammas])
+			self.likelihood = np.exp(self.log_likelihood - max(self.log_likelihood))
 		self.prior=(sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(self.gammas)
 		self.samples=self.posterior()
-
-
 
 	def pri(self,gamma):
 		return (sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(gamma)
@@ -115,7 +113,10 @@ class Fit_Bayes(object):
 	    return s
 
 	def l(self,gamma):
-	    return np.exp((-len(self.data)*np.log(self.Z(gamma))-gamma*np.sum(np.log(self.data)))-max(self.log_likelihood))
+		if self.discrete==True:
+			return np.exp((-self.n*np.log(self.Z(gamma))-gamma*np.sum(np.log(self.data)))-max(self.log_likelihood))
+		else:
+			return np.prod((self.data**-gamma)*(1-gamma))
 
 
 	def target (self, gamma):
@@ -171,9 +172,9 @@ xmax=100
 sample_size=1000
 #initial_guess=np.linspace(1,5,10)
 
-data=power_law(exponent, xmax, sample_size)
+data=power_law(exponent, xmax, sample_size, discrete=False)
 
-test = Fit_Bayes(data)
+test = Fit_Bayes(data, discrete=False)
 
 print (test.samples)
 
