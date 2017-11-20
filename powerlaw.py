@@ -167,18 +167,17 @@ class Fit_Bayes(object):
 		return samples
 
 
+exponent = np.linspace(1.02, 4.9, 50)
 
-exponent=3.0
-xmax=100
-sample_size=1000
-#initial_guess=np.linspace(1,5,10)
+xmax = 1000
+sample_size = 1000
+ML_mean = np.zeros((50, 50))
+Bayes_mean = np.zeros((50, 50))
 
-data=power_law(exponent, xmax, sample_size)
-
-test = Fit_Bayes(data)
-
-print (test.samples)
-
-print (np.mean(test.samples))
-print (np.std(test.samples))
-print (test.sigma)
+for i in range(len(exponent)):
+    for j in range(50):
+        data = power_law(exponent[j], xmax, sample_size)
+        ML = Fit(data)
+        Bayes = Fit_Bayes(data)
+        ML_mean[i, j] = np.mean(ML.best_guess)
+        Bayes_mean[i, j] = np.mean(Bayes.samples)
