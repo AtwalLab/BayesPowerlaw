@@ -82,7 +82,7 @@ class Fit(object):
 		return 1+self.n/(np.sum(np.log(self.data))-self.n*np.log(self.xmin))
 
 class Fit_Bayes(object):
-	def __init__(self, data, gamma_range=[1,5], xmin=1, xmax=np.infty, discrete=True):
+	def __init__(self, data, gamma_range=[1,5], xmin=1, xmax=np.infty, discrete=True, niters=5000):
 		self.data=data
 		self.n=len(data)
 		self.constant=np.sum(np.log(data))/self.n
@@ -90,6 +90,7 @@ class Fit_Bayes(object):
 		self.xmin=xmin
 		self.xmax=xmax
 		self.discrete=discrete
+		self.niters=niters
 		self.gammas=np.linspace(1.01,gamma_range[1]*2, 10000)
 		if self.discrete==True:
 			self.log_likelihood=np.array([-self.n*np.log(self.Z(j))-j*np.sum(np.log(self.data)) for j in self.gammas])
@@ -121,10 +122,11 @@ class Fit_Bayes(object):
 
 
 	def target (self, gamma):
-	    if gamma <= 1 or gamma >5:
-	        return 0
-	    else:
-	        return self.l(gamma)*self.pri(gamma)
+		if gamma <= 1 or gamma > 5:
+			p = 0
+		else:
+			p = self.l(gamma)*self.pri(gamma)
+		return p
 
 	
 	def posterior (self):
@@ -132,7 +134,6 @@ class Fit_Bayes(object):
 		naccept=0
 		gamma=1.01
 		burn_in=100
-		niters=5000
 		#perform a burn in first without recording gamma values
 		for i in range(burn_in+1):
 			gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
@@ -143,10 +144,10 @@ class Fit_Bayes(object):
 			if a>=1 and gamma_p>1:
 				gamma = gamma_p	
 		#now perform the rest of the sampling while recording gamma values
-		samples = np.zeros(niters+1)
+		samples = np.zeros(self.niters+1)
 		samples[0]=gamma
 		sigma=0.8
-		for i in range(1,niters+1):
+		for i in range(1,self.niters+1):
 			gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
 			if self.target(gamma) == 0:
 				a = np.infty
@@ -167,17 +168,40 @@ class Fit_Bayes(object):
 		return samples
 
 
-exponent = np.linspace(1.02, 4.9, 50)
+exponent = np.linspace(1.02, 4.9, 25)
 
-xmax = 1000
-sample_size = 1000
+xmax = np.array([10,50,100,300,600,1000])
+sample_size = np.array([10, 50, 100, 200, 400, 600, 800, 1000, 2000])
+niters=np.array([1000,5000,10000])
 ML_mean = np.zeros((50, 50))
 Bayes_mean = np.zeros((50, 50))
 
-for i in range(len(exponent)):
-    for j in range(50):
-        data = power_law(exponent[j], xmax, sample_size)
-        ML = Fit(data)
-        Bayes = Fit_Bayes(data)
-        ML_mean[i, j] = np.mean(ML.best_guess)
-        Bayes_mean[i, j] = np.mean(Bayes.samples)
+for n in range(len(niters)):
+	for s in range(len(sample_size)):
+		for k in range(len(xmax)):
+			ML_mean = np.zeros((50, 50))
+			Bayes_mean = np.zeros((50, 50))
+			for i in range(len(exponent)):
+				for j in range(50):
+					data = power_law(exponent[j], xmax[k], sample_size[s])
+					ML = Fit(data)
+					Bayes = Fit_Bayes(data, niters=niters[n])
+					ML_mean[i, j] = np.mean(ML.best_guess)
+					Bayes_mean[i, j] = np.mean(Bayes.samples)
+
+					ml_mean = np.array(ml.mean(axis=0))
+					ml_std = np.array(ml.std(axis=0))
+					bayes_mean = np.array(bayes.mean(axis=0))
+					bayes_std = np.array(bayes.std(axis=0))
+
+					plt.figure(figsize=(20, 18))
+					plt.scatter(exponent, ml_mean, color='red', label='ML')
+					plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
+					plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
+					plt.errorbar(exponent, bayes_mean, yerr=ml_std, ls='none', color='blue', elinewidth=1, capsize=4)
+					plt.plot(exponent, exponent, color='black', label='Correct')
+					plt.legend(fontsize=20)
+					plt.ylabel('Fitted Exponent', fontsize=20)
+					plt.xlabel('Real Exponent', fontsize=20)
+
+					plt.savefig('xmax{}_N{}_its{}'.format(xmax[k], sample_size[s],))
