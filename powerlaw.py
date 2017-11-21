@@ -76,7 +76,11 @@ class Fit(object):
 		for i in range(len(best_guess)):
 			log_likelihood[i]=-self.n*np.log(self.Z(best_guess[i]))-best_guess[i]*np.sum(np.log(self.data))
 		self.log_likelihood=log_likelihood
-		return best_guess[np.where(log_likelihood==max(log_likelihood))]
+		if len(log_likelihood)==0:
+			best_guess=0
+		else:
+		    best_guess=best_guess[np.where(log_likelihood == max(log_likelihood))]
+		return best_guess
 
 	def Guess_continuous(self):
 		return 1+self.n/(np.sum(np.log(self.data))-self.n*np.log(self.xmin))
@@ -170,38 +174,36 @@ class Fit_Bayes(object):
 
 exponent = np.linspace(1.02, 4.9, 25)
 
-xmax = np.array([10,50,100,300,600,1000])
-sample_size = np.array([10, 50, 100, 200, 400, 600, 800, 1000, 2000])
+xmax = 10
+sample_size = 10
 niters=np.array([1000,5000,10000])
 ML_mean = np.zeros((50, 50))
 Bayes_mean = np.zeros((50, 50))
 
 for n in range(len(niters)):
-	for s in range(len(sample_size)):
-		for k in range(len(xmax)):
-			ML_mean = np.zeros((50, 50))
-			Bayes_mean = np.zeros((50, 50))
-			for i in range(len(exponent)):
-				for j in range(50):
-					data = power_law(exponent[j], xmax[k], sample_size[s])
-					ML = Fit(data)
-					Bayes = Fit_Bayes(data, niters=niters[n])
-					ML_mean[i, j] = np.mean(ML.best_guess)
-					Bayes_mean[i, j] = np.mean(Bayes.samples)
+	ML_mean = np.zeros((50, 50))
+	Bayes_mean = np.zeros((50, 50))
+	for i in range(len(exponent)):
+		for j in range(50):
+			data = power_law(exponent[j], xmax[k], sample_size[s])
+			ML = Fit(data)
+			Bayes = Fit_Bayes(data, niters=niters[n])
+			ML_mean[i, j] = np.mean(ML.best_guess)
+			Bayes_mean[i, j] = np.mean(Bayes.samples)
 
-					ml_mean = np.array(ml.mean(axis=0))
-					ml_std = np.array(ml.std(axis=0))
-					bayes_mean = np.array(bayes.mean(axis=0))
-					bayes_std = np.array(bayes.std(axis=0))
+			ml_mean = np.array(ml.mean(axis=0))
+			ml_std = np.array(ml.std(axis=0))
+			bayes_mean = np.array(bayes.mean(axis=0))
+			bayes_std = np.array(bayes.std(axis=0))
 
-					plt.figure(figsize=(20, 18))
-					plt.scatter(exponent, ml_mean, color='red', label='ML')
-					plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
-					plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
-					plt.errorbar(exponent, bayes_mean, yerr=ml_std, ls='none', color='blue', elinewidth=1, capsize=4)
-					plt.plot(exponent, exponent, color='black', label='Correct')
-					plt.legend(fontsize=20)
-					plt.ylabel('Fitted Exponent', fontsize=20)
-					plt.xlabel('Real Exponent', fontsize=20)
+			plt.figure(figsize=(20, 18))
+			plt.scatter(exponent, ml_mean, color='red', label='ML')
+			plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
+			plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
+			plt.errorbar(exponent, bayes_mean, yerr=ml_std, ls='none', color='blue', elinewidth=1, capsize=4)
+			plt.plot(exponent, exponent, color='black', label='Correct')
+			plt.legend(fontsize=20)
+			plt.ylabel('Fitted Exponent', fontsize=20)
+			plt.xlabel('Real Exponent', fontsize=20)
 
-					plt.savefig('xmax{}_N{}_its{}'.format(xmax[k], sample_size[s],))
+			plt.savefig('xmax{}_N{}_its{}.png'.format(xmax, sample_size,niters[n]))
