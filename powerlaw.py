@@ -201,7 +201,7 @@ for n in range(len(iterations)):
 	plt.scatter(exponent, ml_mean, color='red', label='ML')
 	plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
 	plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
-	plt.errorbar(exponent, bayes_mean, yerr=ml_std, ls='none', color='blue', elinewidth=1, capsize=4)
+	plt.errorbar(exponent, bayes_mean, yerr=bayes_std, ls='none', color='blue', elinewidth=1, capsize=4)
 	plt.plot(exponent, exponent, color='black', label='Correct')
 	plt.legend(fontsize=15)
 	plt.ylabel('Fitted Exponent', fontsize=15)
