@@ -1,8 +1,16 @@
+import matplotlib
+matplotlib.use('Agg')
+
+from sys import *
+import sys
+
 from scipy.optimize import newton
 from scipy.special import zeta
 import scipy as sp
 import numpy as np
 from scipy.stats import uniform
+import matplotlib.pyplot as plt
+
 
 
 def power_law(exponent, xmax, sample_size, discrete=True):
@@ -141,11 +149,8 @@ class Fit_Bayes(object):
 		#perform a burn in first without recording gamma values
 		for i in range(burn_in+1):
 			gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
-			if self.target(gamma)==0:
-				a=np.infty
-			else:
-				a=(self.target(gamma_p)/self.target(gamma))*(gamma_p/gamma)
-			if a>=1 and gamma_p>1:
+			a=(self.target(gamma_p)/self.target(gamma))*(gamma_p/gamma)
+			if a>=1:
 				gamma = gamma_p	
 		#now perform the rest of the sampling while recording gamma values
 		samples = np.zeros(self.niters+1)
@@ -153,11 +158,8 @@ class Fit_Bayes(object):
 		sigma=0.8
 		for i in range(1,self.niters+1):
 			gamma_p=gamma+sp.stats.norm(0,sigma).rvs()
-			if self.target(gamma) == 0:
-				a = np.infty
-			else:
-				a = (self.target(gamma_p) / self.target(gamma)) * (gamma_p / gamma)
-			if a >= 1 and gamma_p > 1:
+			a = (self.target(gamma_p) / self.target(gamma)) * (gamma_p / gamma)
+			if a >= 1:
 				gamma = gamma_p
 			samples[i]=gamma
 			
@@ -174,36 +176,35 @@ class Fit_Bayes(object):
 
 exponent = np.linspace(1.02, 4.9, 25)
 
-xmax = 10
-sample_size = 10
-niters=np.array([1000,5000,10000])
-ML_mean = np.zeros((50, 50))
-Bayes_mean = np.zeros((50, 50))
+xmax = int(argv[1])
+sample_size = int(argv[2])
+iterations=np.array([1000,5000])
 
-for n in range(len(niters)):
-	ML_mean = np.zeros((50, 50))
-	Bayes_mean = np.zeros((50, 50))
+
+for n in range(len(iterations)):
+	ML_mean = np.zeros((len(exponent), 50))
+	Bayes_mean = np.zeros((len(exponent), 50))
 	for i in range(len(exponent)):
 		for j in range(50):
-			data = power_law(exponent[j], xmax[k], sample_size[s])
+			data = power_law(exponent[i], xmax, sample_size)
 			ML = Fit(data)
-			Bayes = Fit_Bayes(data, niters=niters[n])
+			Bayes = Fit_Bayes(data, niters=iterations[n])
 			ML_mean[i, j] = np.mean(ML.best_guess)
 			Bayes_mean[i, j] = np.mean(Bayes.samples)
 
-			ml_mean = np.array(ml.mean(axis=0))
-			ml_std = np.array(ml.std(axis=0))
-			bayes_mean = np.array(bayes.mean(axis=0))
-			bayes_std = np.array(bayes.std(axis=0))
+	ml_mean=np.mean(ML_mean, axis=1)
+	ml_std=np.std(ML_mean,axis=1)
+	bayes_mean=np.mean(Bayes_mean, axis=1)
+	bayes_std=np.std(Bayes_mean, axis=1)
 
-			plt.figure(figsize=(20, 18))
-			plt.scatter(exponent, ml_mean, color='red', label='ML')
-			plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
-			plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
-			plt.errorbar(exponent, bayes_mean, yerr=ml_std, ls='none', color='blue', elinewidth=1, capsize=4)
-			plt.plot(exponent, exponent, color='black', label='Correct')
-			plt.legend(fontsize=20)
-			plt.ylabel('Fitted Exponent', fontsize=20)
-			plt.xlabel('Real Exponent', fontsize=20)
+	plt.figure(figsize=(20, 18))
+	plt.scatter(exponent, ml_mean, color='red', label='ML')
+	plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
+	plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
+	plt.errorbar(exponent, bayes_mean, yerr=ml_std, ls='none', color='blue', elinewidth=1, capsize=4)
+	plt.plot(exponent, exponent, color='black', label='Correct')
+	plt.legend(fontsize=15)
+	plt.ylabel('Fitted Exponent', fontsize=15)
+	plt.xlabel('Real Exponent', fontsize=15)
 
-			plt.savefig('xmax{}_N{}_its{}.png'.format(xmax, sample_size,niters[n]))
+	plt.savefig('xmax{}_N{}_its{}.png'.format(xmax, sample_size, iterations[n]))
