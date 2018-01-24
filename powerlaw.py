@@ -95,163 +95,175 @@ class Fit(object):
 
 
 class Fit_Bayes(object):
-    def __init__(self, data, gamma_range=[1, 6], xmin=1, xmax=np.infty, discrete=True, niters=5000, sigma=10**(-5)):
-        self.data = np.array(data)
-        self.n = len(data)
-        self.constant = np.sum(np.log(data)) / self.n
-        self.range = gamma_range
-        self.xmin = xmin
-        self.xmax = xmax
-        self.discrete = discrete
-        self.niters = niters
-        self.sigma = sigma
-        self.gammas = np.linspace(1.01, self.range[1], 10000)
-        if self.discrete == True:
-            self.log_likelihood = np.array(
-                [-self.n * np.log(self.Z(j)) - j * np.sum(np.log(self.data)) for j in self.gammas])
+    def __init__(self, data, gamma_range=[1,10], xmin=1, xmax=np.infty, discrete=True, niters=5000, sigma=0.01, prior=['powerlaw', 2.0]):
+        if xmin==1 and xmax==np.infty:
+            self.data=np.array(data)
+        if xmin>1 or xmax!=np.infty:
+            self.data=data[(data>=xmin) & (data<=xmax)]
+        self.n=len(self.data)
+        self.constant=np.sum(np.log(self.data))/self.n
+        self.range=gamma_range
+        self.xmin=xmin
+        self.xmax=xmax
+        self.discrete=discrete
+        self.prior_model=prior[0]
+        self.niters=niters
+        self.sigma=sigma
+        self.prior_exp=prior[1]
+        self.gammas=np.linspace(1.01,self.range[1], 10000)
+        if self.discrete==True:
+            self.log_likelihood=np.array([-self.n*np.log(self.Z(j))-j*np.sum(np.log(self.data)) for j in self.gammas])
         else:
-            self.log_likelihood = np.array([-j * np.sum(np.log(self.data)) - self.n * np.log(
-                self.xmin) + self.n * j * np.log(self.xmin) + self.n * np.log(j - 1) for j in self.gammas])
-        self.likelihood = np.exp(
-            self.log_likelihood - max(self.log_likelihood))
-        self.prior = (sp.stats.uniform(
-            self.range[0], self.range[1] - self.range[0])).pdf(self.gammas)
-        self.samples = self.posterior()
-        self.best_guess = np.mean(self.samples)
+            self.log_likelihood=np.array([-j*np.sum(np.log(self.data))-self.n*np.log(self.xmin)+self.n*j*np.log(self.xmin)+self.n*np.log(j-1) for j in self.gammas])
+        if self.prior_model=='powerlaw':
+            self.prior=[(self.prior_exp-1)/(i**self.prior_exp) for i in self.gammas]
+        if self.prior_model=='exponential':
+            self.prior=[(1/self.prior_exp)*np.exp(-i/self.prior_exp) for i in self.gammas]
+        else:    
+            self.prior=(sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(self.gammas)
+        self.samples=self.posterior()
+        self.best_guess=np.mean(self.samples)
 
-    def pri(self, gamma):
-        return (sp.stats.uniform(self.range[0], self.range[1] - self.range[0])).pdf(gamma)
-
-    def Z(self, gamma, xmin=1, xmax=np.infty):
-        """The normalization function Z.
-        Note that default arguments of xmin and xmax make Z equivalent to Riemann zeta function which is already
-        implemented in Scipy as zeta(gamma,1)"""
-        if np.isfinite(xmax):
-            s = 0
-            for i in xrange(xmin, xmax + 1):
-                s += (1 / (i**gamma))
+    def log_prior(self,gamma):
+        if self.prior_model=='powerlaw':
+            prior_answer=np.log((self.prior_exp-1)/(gamma**self.prior_exp))
+        if self.prior_model=='exponential':
+            prior_answer=np.log((1/self.prior_exp)*np.exp(-gamma/self.prior_exp))
         else:
-            s = zeta(gamma, xmin)
+            prior_answer=np.log((sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(gamma))
+        return prior_answer
+
+    def Z(self,gamma):
+        """The normalization function Z."""  
+        if np.isfinite(self.xmax):
+            s=0
+            for i in range(self.xmin,self.xmax+1):
+                s+=(1/(i**gamma))
+        else:
+            s=zeta(gamma,self.xmin)
         return s
+    
 
-    def l(self, gamma):
-        if self.discrete == True:
-            lik = np.exp((-self.n * np.log(self.Z(gamma)) - gamma *
-                          np.sum(np.log(self.data))) - max(self.log_likelihood))
+    def L(self,gamma):
+        if self.discrete==True:
+            lik = (-self.n*np.log(self.Z(gamma))-gamma*np.sum(np.log(self.data)))
         else:
-            lik = np.exp((-gamma * np.sum(np.log(self.data)) - self.n * np.log(self.xmin) + self.n *
-                          gamma * np.log(self.xmin) + self.n * np.log(gamma - 1) - max(self.log_likelihood)))
+            lik = (-gamma * np.sum(np.log(self.data)) - self.n * np.log(self.xmin) + self.n * gamma * np.log(self.xmin) + self.n * np.log(gamma - 1))
         return lik
 
-    def target(self, gamma):
+
+    def target (self, gamma):
         if gamma <= self.range[0] or gamma > self.range[1]:
             p = 0
         else:
-            p = self.l(gamma) * self.pri(gamma)
+            p = self.L(gamma)+self.log_prior(gamma)
         return p
+    
 
-    def monte_carlo(self, gamma, sigma, accept):
+    def monte_carlo(self,gamma,sigma,accept,a_array,burn_in=False):
         gamma_p = gamma + sp.stats.norm(0, sigma).rvs()
-        if self.target(gamma) == 0:
-            if self.target(gamma_p) > 0:
-                a = 1.0
-            else:
-                a = (-1.0)
+        if self.target(gamma_p)==0:
+            a=-1
+        else: 
+            a = min(0,self.target(gamma_p)-self.target(gamma))
+            a_array=np.append(a_array,a)
+        if burn_in==True:
+            if a==0.0:
+                gamma=gamma_p
         else:
-            a = np.min(1.0, (self.target(gamma_p) / self.target(gamma)) * (gamma_p / gamma))
-        if a >= np.random.uniform(0.0, 1.0):
-            gamma = gamma_p
-            accept = accept + 1
-        return gamma, accept
+            
+            if a>np.log(np.random.uniform(0.0, 1.0)):
+                gamma=gamma_p
+                accept=accept+1
+        return gamma, accept, a_array
 
-#     def step_size(self,sigma,accept):
-#         diff = abs(accept / 500 - 0.35)
-#         if accept/500 > 0.5:
-#             sigma = sigma + 0
-#         if accept / 500 < 0.35:
-#             sigma = max(sigma - 0.5e-5, 1e-10)
-#         return sigma
 
-    def posterior(self):
+    def posterior (self):
+        a_array=np.array([])
         sigma_burn = 1.0
-        gamma = 1.01
-        accept = 0
-        burn_in = 100
-        acceptance = np.array([])
-        sigma_record = np.array([])
+        gamma=1.01
+        accept=0
+        burn_in=1000
+        acceptance=np.array([])
+        sigma_record=np.array([])
         #perform a burn in first without recording gamma values
-        for i in range(1, burn_in + 1):
-            gamma, accept = self.monte_carlo(gamma, sigma_burn, accept)
+        for i in range(1,burn_in+1):
+            gamma, accept, a_array=self.monte_carlo(gamma, sigma_burn, accept,a_array, burn_in=True)
         #now perform the rest of the sampling while recording gamma values
-        samples = np.zeros(self.niters + 1)
-        samples[0] = gamma
-        for i in range(1, self.niters + 1):
-            gamma, accept = self.monte_carlo(gamma, self.sigma, accept)
+        samples = np.zeros(self.niters+1)
+        samples[0]=gamma
+        for i in range(1,self.niters+1):
+            gamma, accept, a_array=self.monte_carlo(gamma, self.sigma, accept, a_array)
             samples[i] = gamma
-#             if i%500==0:
-#                 sigma = self.step_size(sigma, accept)
-#                 acceptance = np.append(acceptance, accept / 500)
-#                 sigma_record=np.append(sigma_record,sigma)
-#                 accept=0
-#         self.sigma_record=sigma_record
-#         self.acceptance=acceptance
-
+        self.a=a_array
         return samples
 
+   
     @staticmethod
     def plot_fit(bayes_object, label=None, color=None):
         data = bayes_object.data
         exponent = bayes_object.best_guess
         xmin = bayes_object.xmin
         xmax = bayes_object.xmin
-
-        def Z(exponent, xmin, xmax):
+        discrete=bayes_object.discrete
+        
+        def Z(exponent,xmin,xmax):
             """The normalization function Z.
             Note that default arguments of xmin and xmax make Z equivalent to Riemann zeta function which is already
             implemented in Scipy as zeta(gamma,1)"""
             if np.isfinite(xmax):
-                s = 0
-                for i in range(xmin, xmax + 1):
-                    s += (1 / (i**exponent))
+                s=0
+                for i in range(xmin,xmax+1):
+                    s+=(1/(i**exponent))
             else:
-                s = zeta(exponent, xmin)
+                s=zeta(exponent,xmin)
             return s
-
-        def powerlawpdf(data, exponent):
+        
+        def powerlawpdf(data, exponent, xmin):
             """The power law probability function
             Input: x - array of clone sizes; gamma - desired exponent.
             Output: array of probabilities of each clone size x."""
-            return (data**(-exponent)) / Z(exponent, xmin, xmax)
-
-        unique, counts = np.unique(data, return_counts=True)
-        frequency = counts / np.sum(counts)
-        xp = np.arange(1, np.max(data) + 1)
-
-        plt.loglog(unique, frequency, 'o', color=color,
-                   markeredgecolor='black', label=label)
-        plt.plot(xp, powerlawpdf(xp, exponent), color=color, linewidth=2)
-        plt.legend()
-        return
-
+            if discrete==True:
+                powerlaw=(data**(-exponent))/Z(exponent,xmin,xmax)
+            else:
+                powerlaw=((data/xmin)**(-exponent))*((exponent-1)/xmin)
+            return powerlaw
+        
+        if discrete==True:
+            unique, counts = np.unique(data, return_counts=True)
+            frequency=counts/np.sum(counts)
+            xp=np.arange(np.min(data),np.max(data)+1)
+            plt.loglog(unique,frequency,'o', color=color, markeredgecolor='black', label=label)
+            plt.plot(xp,powerlawpdf(xp,exponent,xmin), color=color, linewidth=2)
+            plt.legend()
+        else:
+            xp=np.arange(np.min(data),np.max(data)+1)
+            plt.hist(data, bins=50, color=color, label=label)
+            plt.plot(xp,powerlawpdf(xp,exponent,xmin), color=color, linewidth=2)
+            plt.xscale('log')
+            plt.yscale('log')
+            plt.legend()
+        
+        return 
+        
+        
     @staticmethod
     def plot_prior(bayes_object, color=None, label=None):
-        plt.plot(bayes_object.gammas, bayes_object.prior,
-                 color=color, label=label)
+        plt.plot(bayes_object.gammas, bayes_object.prior, color=color, label=label)
         return
-
+    
     @staticmethod
     def plot_likelihood(bayes_object, color=None, label=None):
-        plt.plot(bayes_object.gammas, bayes_object.likelihood,
-                 color=color, label=label)
+        plt.plot(bayes_object.gammas,bayes_object.log_likelihood, color=color, label=label)
         plt.legend()
         return
-
+    
     @staticmethod
     def plot_posterior(bayes_object, bins=100, alpha=0.5, color=None, label=None, range=None):
-        plt.hist(bayes_object.samples, bins, alpha=alpha,
-                 color=color, label=label, range=range)
+        plt.hist(bayes_object.samples, bins, alpha=alpha, color=color, label=label, range=range, normed=True)
         plt.legend()
         return
+    
 
 
 exponent=3.0
