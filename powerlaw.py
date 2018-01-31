@@ -95,16 +95,18 @@ class Fit(object):
 
 
 class Fit_Bayes(object):
-    def __init__(self, data, gamma_range=[1,10], xmin=1, xmax=np.infty, discrete=True, niters=5000, sigma=0.01, prior=['powerlaw', 2.0]):
-        if xmin==1 and xmax==np.infty:
-            self.data=np.array(data)
-        if xmin>1 or xmax!=np.infty:
-            self.data=data[(data>=xmin) & (data<=xmax)]
+    def __init__(self, data, gamma_range=[1,6], xmin=1, xmax=None, discrete=True, niters=5000, sigma=0.01, prior=['',0]):
+        self.data=data
+        self.xmin=xmin
+        if xmax is None:
+            self.xmax=max(self.data)
+        else:
+            self.xmax=xmax
+        if self.xmin>1 or self.xmax!=np.infty:
+            self.data=self.data[(self.data>=self.xmin) & (self.data<=self.xmax)]
         self.n=len(self.data)
         self.constant=np.sum(np.log(self.data))/self.n
         self.range=gamma_range
-        self.xmin=xmin
-        self.xmax=xmax
         self.discrete=discrete
         self.prior_model=prior[0]
         self.niters=niters
@@ -137,8 +139,8 @@ class Fit_Bayes(object):
         """The normalization function Z."""  
         if np.isfinite(self.xmax):
             s=0
-            for i in range(self.xmin,self.xmax+1):
-                s+=(1/(i**gamma))
+            for i in range(int(self.xmin),int(self.xmax)+1):
+                s+=(1.0/(i**gamma))
         else:
             s=zeta(gamma,self.xmin)
         return s
@@ -213,7 +215,7 @@ class Fit_Bayes(object):
             implemented in Scipy as zeta(gamma,1)"""
             if np.isfinite(xmax):
                 s=0
-                for i in range(xmin,xmax+1):
+                for i in range(xmin,xmax):
                     s+=(1/(i**exponent))
             else:
                 s=zeta(exponent,xmin)
@@ -266,15 +268,15 @@ class Fit_Bayes(object):
     
 
 
-exponent=3.0
-xmax=100
-sample_size=1000
+# exponent=3.0
+# xmax=100
+# sample_size=1000
 
-data=power_law(exponent, xmax, sample_size, discrete=False)
+# data=power_law(exponent, xmax, sample_size, discrete=False)
 
-test=Fit_Bayes(data)
+# test=Fit_Bayes(data)
 
-print (test.best_guess)
+# print (test.best_guess)
 
 # exponent = np.linspace(1.02, 4.9, 25)
 
@@ -309,3 +311,24 @@ print (test.best_guess)
 # 	plt.xlabel('Real Exponent', fontsize=15)
 
 # 	plt.savefig('xmax{}_N{}_its{}.png'.format(xmax, sample_size, iterations[n]))
+
+
+simulation_exponents=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
+sample_size=int(argv[1])
+xmin=1
+xmax=1000
+
+Bayes_fits=np.zeros(len(simulation_exponents))
+Bayes_fits_std=np.zeros(len(simulation_exponents))
+
+for k in range(5):
+    for i in range(len(simulation_exponents)):
+        bayes_tests=np.zeros(20)
+        for j in range(20):
+            data=power_law(simulation_exponents[i], xmax, sample_size)
+            bayes = Fit_Bayes(data, prior=['',0.0])
+            bayes_tests[j]=np.mean(bayes.samples)
+        Bayes_fits[i]=np.mean(bayes_tests)
+        Bayes_fits_std[i]=np.std(bayes_tests)
+    np.savetxt('Fits_'+str(int(argv[1]))+'_'+str(k)+'.txt', (Bayes_fits), delimiter=',')
+    np.savetxt('Fits_std'+str(int(argv[1]))+'_'+str(k)+'.txt', (Bayes_fits_std), delimiter=',')
