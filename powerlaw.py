@@ -278,57 +278,55 @@ class Fit_Bayes(object):
 
 # print (test.best_guess)
 
-# exponent = np.linspace(1.02, 4.9, 25)
-
-# xmax = int(argv[1])
-# sample_size = int(argv[2])
-# iterations=np.array([1000,5000])
-
-# for n in range(len(iterations)):
-# 	ML_mean = np.zeros((len(exponent), 50))
-# 	Bayes_mean = np.zeros((len(exponent), 50))
-# 	for i in range(len(exponent)):
-# 		for j in range(50):
-# 			data = power_law(exponent[i], xmax, sample_size)
-# 			ML = Fit(data)
-# 			Bayes = Fit_Bayes(data, niters=iterations[n])
-# 			ML_mean[i, j] = np.mean(ML.best_guess)
-# 			Bayes_mean[i, j] = np.mean(Bayes.samples)
-
-# 	ml_mean=np.mean(ML_mean, axis=1)
-# 	ml_std=np.std(ML_mean,axis=1)
-# 	bayes_mean=np.mean(Bayes_mean, axis=1)
-# 	bayes_std=np.std(Bayes_mean, axis=1)
-
-# 	plt.figure(figsize=(20, 18))
-# 	plt.scatter(exponent, ml_mean, color='red', label='ML')
-# 	plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
-# 	plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
-# 	plt.errorbar(exponent, bayes_mean, yerr=bayes_std, ls='none', color='blue', elinewidth=1, capsize=4)
-# 	plt.plot(exponent, exponent, color='black', label='Correct')
-# 	plt.legend(fontsize=15)
-# 	plt.ylabel('Fitted Exponent', fontsize=15)
-# 	plt.xlabel('Real Exponent', fontsize=15)
-
-# 	plt.savefig('xmax{}_N{}_its{}.png'.format(xmax, sample_size, iterations[n]))
+exponent=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
+xmax = 10000
+sample_size = int(argv[1])
 
 
-simulation_exponents=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
-sample_size=int(argv[1])
-xmin=1
-xmax=1000
+ML_mean = np.zeros((len(exponent), 50))
+Bayes_mean = np.zeros((len(exponent), 50))
+for i in range(len(exponent)):
+    for j in range(50):
+        data = power_law(exponent[i], xmax, sample_size)
+        ML = Fit(data)
+        Bayes = Fit_Bayes(data)
+        ML_mean[i, j] = np.mean(ML.best_guess)
+        Bayes_mean[i, j] = np.mean(Bayes.samples)
 
-Bayes_fits=np.zeros(len(simulation_exponents))
-Bayes_fits_std=np.zeros(len(simulation_exponents))
+ml_mean=np.mean(ML_mean, axis=1)
+ml_std=np.std(ML_mean,axis=1)
+bayes_mean=np.mean(Bayes_mean, axis=1)
+bayes_std=np.std(Bayes_mean, axis=1)
 
-for k in range(5):
-    for i in range(len(simulation_exponents)):
-        bayes_tests=np.zeros(20)
-        for j in range(20):
-            data=power_law(simulation_exponents[i], xmax, sample_size)
-            bayes = Fit_Bayes(data, prior=['',0.0])
-            bayes_tests[j]=np.mean(bayes.samples)
-        Bayes_fits[i]=np.mean(bayes_tests)
-        Bayes_fits_std[i]=np.std(bayes_tests)
-    np.savetxt('Fits_'+str(int(argv[1]))+'_'+str(k)+'.txt', (Bayes_fits), delimiter=',')
-    np.savetxt('Fits_std'+str(int(argv[1]))+'_'+str(k)+'.txt', (Bayes_fits_std), delimiter=',')
+plt.figure(figsize=(20, 18))
+plt.scatter(exponent, ml_mean, color='red', label='ML')
+plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
+plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
+plt.errorbar(exponent, bayes_mean, yerr=bayes_std, ls='none', color='blue', elinewidth=1, capsize=4)
+plt.plot(exponent, exponent, color='black', label='Correct')
+plt.legend(fontsize=15)
+plt.ylabel('Fitted Exponent', fontsize=15)
+plt.xlabel('Real Exponent', fontsize=15)
+
+plt.savefig('test_fits_{}.png'.format(sample_size))
+
+
+# simulation_exponents=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
+# sample_size=int(argv[1])
+# xmin=1
+# xmax=1000
+
+# Bayes_fits=np.zeros(len(simulation_exponents))
+# Bayes_fits_std=np.zeros(len(simulation_exponents))
+
+# for k in range(5):
+#     for i in range(len(simulation_exponents)):
+#         bayes_tests=np.zeros(20)
+#         for j in range(20):
+#             data=power_law(simulation_exponents[i], xmax, sample_size)
+#             bayes = Fit_Bayes(data, prior=['',0.0])
+#             bayes_tests[j]=np.mean(bayes.samples)
+#         Bayes_fits[i]=np.mean(bayes_tests)
+#         Bayes_fits_std[i]=np.std(bayes_tests)
+#     np.savetxt('Fits_'+str(int(argv[1]))+'_'+str(k)+'.txt', (Bayes_fits), delimiter=',')
+#     np.savetxt('Fits_std'+str(int(argv[1]))+'_'+str(k)+'.txt', (Bayes_fits_std), delimiter=',')
