@@ -99,7 +99,7 @@ class Fit_Bayes(object):
         self.data=data
         self.xmin=xmin
         if xmax is None:
-            self.xmax=max(self.data)
+            self.xmax=max(100.0,max(self.data))
         else:
             self.xmax=xmax
         if self.xmin>1 or self.xmax!=np.infty:
@@ -308,7 +308,7 @@ plt.legend(fontsize=15)
 plt.ylabel('Fitted Exponent', fontsize=15)
 plt.xlabel('Real Exponent', fontsize=15)
 
-plt.savefig('test_fits_{}.png'.format(sample_size))
+plt.savefig('test2_fits_{}.png'.format(sample_size))
 
 
 # simulation_exponents=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
