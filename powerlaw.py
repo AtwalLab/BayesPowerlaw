@@ -58,24 +58,22 @@ class Fit(object):
         else:
             self.best_guess=self.Guess_continuous()
 
-    def Z(self,gamma,xmin=1,xmax=np.infty):
-        """The normalization function Z.
-        Note that default arguments of xmin and xmax make Z equivalent to Riemann zeta function which is already
-        implemented in Scipy as zeta(gamma,1)"""
-        if np.isfinite(xmax):
+    def Z(self,gamma):
+        """The normalization function Z."""  
+        if np.isfinite(self.xmax):
             s=0
-            for i in xrange(xmin,xmax+1):
-                s+=(1/(i**gamma))
+            for i in range(int(self.xmin),int(self.xmax)+1):
+                s+=(1.0/(i**gamma))
         else:
-            s=zeta(gamma,xmin)
+            s=zeta(gamma,self.xmin)
         return s
 
     def F(self,gamma):
         """The optimization function F(gamma). C is the second term in the definition of F(gamma) and is independent of
         gamma. C need to be defined before running the function. Function Z must be run beforehand as well."""
         h = 1e-8
-        Z_prime = (self.Z(gamma+h,self.xmin,self.xmax) - self.Z(gamma-h,self.xmin,self.xmax))/(2*h)
-        return (Z_prime/self.Z(gamma,self.xmin,self.xmax))+self.constant
+        Z_prime = (self.Z(gamma+h) - self.Z(gamma-h))/(2*h)
+        return (Z_prime/self.Z(gamma))+self.constant
 
     def Guess_discrete(self):
         best_guess=np.zeros(len(self.initial_guess))
@@ -103,7 +101,7 @@ class Fit_Bayes(object):
         self.data=data
         self.xmin=xmin
         if xmax is None:
-            self.xmax=max(self.data)+50
+            self.xmax=max(self.data)+50.0
         else:
             self.xmax=xmax
         if self.xmin>1 or self.xmax!=np.infty:
