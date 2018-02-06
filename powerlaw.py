@@ -312,7 +312,7 @@ plt.legend(fontsize=15)
 plt.ylabel('Fitted Exponent', fontsize=15)
 plt.xlabel('Real Exponent', fontsize=15)
 
-plt.savefig('test2_fits_{}.png'.format(sample_size))
+plt.savefig('test50_fits_{}.png'.format(sample_size))
 
 
 # simulation_exponents=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
