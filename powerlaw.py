@@ -44,7 +44,7 @@ class Fit(object):
         self.data=data
         self.xmin=xmin
         if xmax is None:
-            self.xmax=max(self.data)+50
+            self.xmax=max(self.data)+10.0
         else:
             self.xmax=xmax
         if self.xmin>1 or self.xmax!=np.infty:
@@ -101,7 +101,7 @@ class Fit_Bayes(object):
         self.data=data
         self.xmin=xmin
         if xmax is None:
-            self.xmax=max(self.data)+50.0
+            self.xmax=max(self.data)+10.0
         else:
             self.xmax=xmax
         if self.xmin>1 or self.xmax!=np.infty:
@@ -167,7 +167,7 @@ class Fit_Bayes(object):
     def monte_carlo(self,gamma,sigma,accept,a_array,burn_in=False):
         gamma_p = gamma + sp.stats.norm(0, sigma).rvs()
         if self.target(gamma_p)==0:
-            a=-1
+            a = -10**8
         else: 
             a = min(0,self.target(gamma_p)-self.target(gamma))
             a_array=np.append(a_array,a)
@@ -208,7 +208,7 @@ class Fit_Bayes(object):
         data = bayes_object.data
         exponent = bayes_object.best_guess
         xmin = bayes_object.xmin
-        xmax = bayes_object.xmin
+        xmax = bayes_object.xmax
         discrete=bayes_object.discrete
         
         def Z(exponent,xmin,xmax):
@@ -230,7 +230,7 @@ class Fit_Bayes(object):
             if discrete==True:
                 powerlaw=(data**(-exponent))/Z(exponent,xmin,xmax)
             else:
-                powerlaw=((data/xmin)**(-exponent))*((exponent-1)/xmin)
+                powerlaw=((data)**(-exponent))*(xmin**(exponent-1)/(exponent-1))
             return powerlaw
         
         if discrete==True:
@@ -280,7 +280,7 @@ class Fit_Bayes(object):
 
 # print (test.best_guess)
 
-exponent=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
+exponent=np.array([1.01, 1.1, 1.4, 1.7, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
 xmax = 10000
 sample_size = int(argv[1])
 
@@ -310,7 +310,7 @@ plt.legend(fontsize=15)
 plt.ylabel('Fitted Exponent', fontsize=15)
 plt.xlabel('Real Exponent', fontsize=15)
 
-plt.savefig('test50_fits_{}.png'.format(sample_size))
+plt.savefig('test10_fits_{}.png'.format(sample_size))
 
 
 # simulation_exponents=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
