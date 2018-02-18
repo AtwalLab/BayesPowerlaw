@@ -1,9 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-
-from sys import *
-import sys
-
 from scipy.optimize import newton
 from scipy.special import zeta
 import scipy as sp
@@ -211,14 +205,15 @@ class Fit_Bayes(object):
         xmax = bayes_object.xmax
         discrete=bayes_object.discrete
         
+
         def Z(exponent,xmin,xmax):
             """The normalization function Z.
             Note that default arguments of xmin and xmax make Z equivalent to Riemann zeta function which is already
             implemented in Scipy as zeta(gamma,1)"""
             if np.isfinite(xmax):
-                s=0
-                for i in range(xmin,xmax):
-                    s+=(1/(i**exponent))
+                s=0.0
+                for i in range(int(xmin),int(xmax+1)):
+                    s+=(1.0/(i**exponent))
             else:
                 s=zeta(exponent,xmin)
             return s
@@ -236,7 +231,8 @@ class Fit_Bayes(object):
         if discrete==True:
             unique, counts = np.unique(data, return_counts=True)
             frequency=counts/np.sum(counts)
-            xp=np.arange(np.min(data),np.max(data)+1)
+            xpmax=((Z(exponent,xmin,xmax)/len(data))**(-1/exponent))*2
+            xp=np.arange(np.min(data),xpmax)
             plt.loglog(unique,frequency,'o', color=color, markeredgecolor='black', label=label)
             plt.plot(xp,powerlawpdf(xp,exponent,xmin), color=color, linewidth=2)
             plt.legend()
@@ -267,68 +263,3 @@ class Fit_Bayes(object):
         plt.hist(bayes_object.samples, bins, alpha=alpha, color=color, label=label, range=range, normed=True)
         plt.legend()
         return
-    
-
-
-# exponent=3.0
-# xmax=100
-# sample_size=1000
-
-# data=power_law(exponent, xmax, sample_size, discrete=False)
-
-# test=Fit_Bayes(data)
-
-# print (test.best_guess)
-
-exponent=np.array([1.01, 1.1, 1.4, 1.7, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
-xmax = 10000
-sample_size = int(argv[1])
-
-
-ML_mean = np.zeros((len(exponent), 50))
-Bayes_mean = np.zeros((len(exponent), 50))
-for i in range(len(exponent)):
-    for j in range(50):
-        data = power_law(exponent[i], xmax, sample_size)
-        ML = Fit(data)
-        Bayes = Fit_Bayes(data)
-        ML_mean[i, j] = np.mean(ML.best_guess)
-        Bayes_mean[i, j] = np.mean(Bayes.samples)
-
-ml_mean=np.mean(ML_mean, axis=1)
-ml_std=np.std(ML_mean,axis=1)
-bayes_mean=np.mean(Bayes_mean, axis=1)
-bayes_std=np.std(Bayes_mean, axis=1)
-
-plt.figure(figsize=(20, 18))
-plt.scatter(exponent, ml_mean, color='red', label='ML')
-plt.errorbar(exponent, ml_mean, yerr=ml_std, ls='none', color='red', elinewidth=1, capsize=4)
-plt.scatter(exponent, bayes_mean, color='blue', label='Bayes')
-plt.errorbar(exponent, bayes_mean, yerr=bayes_std, ls='none', color='blue', elinewidth=1, capsize=4)
-plt.plot(exponent, exponent, color='black', label='Correct')
-plt.legend(fontsize=15)
-plt.ylabel('Fitted Exponent', fontsize=15)
-plt.xlabel('Real Exponent', fontsize=15)
-
-plt.savefig('test10_fits_{}.png'.format(sample_size))
-
-
-# simulation_exponents=np.array([1.01, 1.1, 1.3, 1.5, 1.7, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0])
-# sample_size=int(argv[1])
-# xmin=1
-# xmax=1000
-
-# Bayes_fits=np.zeros(len(simulation_exponents))
-# Bayes_fits_std=np.zeros(len(simulation_exponents))
-
-# for k in range(5):
-#     for i in range(len(simulation_exponents)):
-#         bayes_tests=np.zeros(20)
-#         for j in range(20):
-#             data=power_law(simulation_exponents[i], xmax, sample_size)
-#             bayes = Fit_Bayes(data, prior=['',0.0])
-#             bayes_tests[j]=np.mean(bayes.samples)
-#         Bayes_fits[i]=np.mean(bayes_tests)
-#         Bayes_fits_std[i]=np.std(bayes_tests)
-#     np.savetxt('Fits_'+str(int(argv[1]))+'_'+str(k)+'.txt', (Bayes_fits), delimiter=',')
-#     np.savetxt('Fits_std'+str(int(argv[1]))+'_'+str(k)+'.txt', (Bayes_fits_std), delimiter=',')
