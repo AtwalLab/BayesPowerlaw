@@ -44,5 +44,6 @@ plt.plot(exponent, exponent, color='black', label='Correct')
 plt.legend(fontsize=15)
 plt.ylabel('Fitted Exponent', fontsize=15)
 plt.xlabel('Simulated Exponent', fontsize=15)
+plt.tight_layout()
 
 plt.savefig('MLvsBayes_fits_{}.png'.format(sample_size))

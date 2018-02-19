@@ -12,7 +12,7 @@ from scipy.stats import uniform
 import matplotlib.pyplot as plt
 import powerlaw as pl
 
-exponents = ([1.01,1.0,2.0,3.0,4.0,5.0])
+exponents = ([1.01,2.0,3.0,4.0,5.0])
 xmax = 10000
 sample_size = 100000
 
@@ -102,6 +102,7 @@ plt.axhline(y=exponents[4], color='black', linewidth=0.5)
 plt.legend(fontsize=15)
 plt.ylabel('Fitted Exponent', fontsize=15)
 plt.xlabel('Sample fraction', fontsize=15)
+plt.tight_layout()
 
 plt.savefig('Subsample_fits.png')
 plt.savefig('Subsample_fits.svg')
