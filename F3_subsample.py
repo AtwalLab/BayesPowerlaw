@@ -24,78 +24,79 @@ data5 = pl.power_law(exponents[4], xmax, sample_size)
 
 fractions=([10, 25, 50, 75, 100, 250, 500, 750, 1000, 5000, 10000, 50000, 100000])
 
-ML_fits1=np.zeros(len(fractions))
+
 Bayes_fits1 = np.zeros(len(fractions))
+Bayes_std1 = np.zeros(len(fractions))
 for i in range(len(fractions)):
     data=np.random.choice(data1, fractions[i])
-    ML = pl.Fit(data)
     Bayes = pl.Fit_Bayes(data)
-    ML_fits1[i] = np.mean(ML.best_guess)
     Bayes_fits1[i] = np.mean(Bayes.samples)
+    Bayes_std1[i] = np.std(Bayes.samples)
 
-ML_fits2 = np.zeros(len(fractions))
 Bayes_fits2 = np.zeros(len(fractions))
+Bayes_std2 = np.zeros(len(fractions))
 for i in range(len(fractions)):
     data = np.random.choice(data2, fractions[i])
-    ML = pl.Fit(data)
     Bayes = pl.Fit_Bayes(data)
-    ML_fits2[i] = np.mean(ML.best_guess)
     Bayes_fits2[i] = np.mean(Bayes.samples)
+    Bayes_std2[i] = np.std(Bayes.samples)
 
-ML_fits3 = np.zeros(len(fractions))
 Bayes_fits3 = np.zeros(len(fractions))
+Bayes_std3 = np.zeros(len(fractions))
 for i in range(len(fractions)):
     data = np.random.choice(data3, fractions[i])
-    ML = pl.Fit(data)
     Bayes = pl.Fit_Bayes(data)
-    ML_fits3[i] = np.mean(ML.best_guess)
     Bayes_fits3[i] = np.mean(Bayes.samples)
+    Bayes_std3[i] = np.std(Bayes.samples)
 
-ML_fits4 = np.zeros(len(fractions))
 Bayes_fits4 = np.zeros(len(fractions))
+Bayes_std4 = np.zeros(len(fractions))
 for i in range(len(fractions)):
     data = np.random.choice(data4, fractions[i])
-    ML = pl.Fit(data)
     Bayes = pl.Fit_Bayes(data)
-    ML_fits4[i] = np.mean(ML.best_guess)
     Bayes_fits4[i] = np.mean(Bayes.samples)
+    Bayes_std4[i] = np.std(Bayes.samples)
 
-ML_fits5 = np.zeros(len(fractions))
 Bayes_fits5 = np.zeros(len(fractions))
+Bayes_std5 = np.zeros(len(fractions))
 for i in range(len(fractions)):
     data = np.random.choice(data5, fractions[i])
-    ML = pl.Fit(data)
     Bayes = pl.Fit_Bayes(data)
-    ML_fits5[i] = np.mean(ML.best_guess)
     Bayes_fits5[i] = np.mean(Bayes.samples)
+    Bayes_std5[i] = np.std(Bayes.samples)
+
 
 plt.figure()
-plt.plot(fractions, ML_fits1, '--s', color='blue', label='ML-1', linewidth=1.0)
 plt.plot(fractions, Bayes_fits1, '-o', color='blue',
-         label='Bayes-1', linewidth=1.0)
+         label='1', linewidth=1.0)
+plt.errorbar(fractions, Bayes_fits1, yerr=Bayes_std1,
+             ls='none', color='black', elinewidth=1, capsize=4)
 plt.axhline(y=exponents[0], color='black', linewidth=0.5)
 
-plt.plot(fractions, ML_fits2, '--s', color='red', label='ML-2', linewidth=1.0)
 plt.plot(fractions, Bayes_fits2, '-o', color='red',
-         label='Bayes-2', linewidth=1.0)
+         label='2', linewidth=1.0)
+plt.errorbar(fractions, Bayes_fits2, yerr=Bayes_std2,
+             ls='none', color='black', elinewidth=1, capsize=4)
 plt.axhline(y=exponents[1], color='black', linewidth=0.5)
 
-plt.plot(fractions, ML_fits3, '--s', color='green',
-         label='ML-3', linewidth=1.0)
 plt.plot(fractions, Bayes_fits3, '-o', color='green',
-         label='Bayes-3', linewidth=1.0)
+         label='3', linewidth=1.0)
+plt.errorbar(fractions, Bayes_fits3, yerr=Bayes_std3,
+             ls='none', color='black', elinewidth=1, capsize=4)
 plt.axhline(y=exponents[2], color='black', linewidth=0.5)
 
-plt.plot(fractions, ML_fits4, '--s', color='purple',
-         label='ML-4', linewidth=1.0)
+
 plt.plot(fractions, Bayes_fits4, '-o', color='purple',
-         label='Bayes-4', linewidth=1.0)
+         label='4', linewidth=1.0)
+plt.errorbar(fractions, Bayes_fits4, yerr=Bayes_std4,
+             ls='none', color='black', elinewidth=1, capsize=4)
 plt.axhline(y=exponents[3], color='black', linewidth=0.5)
 
-plt.plot(fractions, ML_fits5, '--s', color='orange',
-         label='ML-5', linewidth=1.0)
+
 plt.plot(fractions, Bayes_fits5, '-o', color='orange',
-         label='Bayes-5', linewidth=1.0)
+         label='5', linewidth=1.0)
+plt.errorbar(fractions, Bayes_fits5, yerr=Bayes_std5,
+             ls='none', color='black', elinewidth=1, capsize=4)
 plt.axhline(y=exponents[4], color='black', linewidth=0.5)
 
 

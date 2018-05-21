@@ -91,112 +91,177 @@ class Fit(object):
 
 
 class Fit_Bayes(object):
-    def __init__(self, data, gamma_range=[1,6], xmin=1, xmax=None, discrete=True, niters=5000, sigma=0.01, prior=['',0]):
-        self.data=data
-        self.xmin=xmin
-        if xmax is None:
-            self.xmax=max(self.data)+10.0
+    """
+    This function fits the data to powerlaw distribution and outputs the exponent. 
+    If the data consists of mixture of 2 or 3 powerlaws, the function will identify the mixture of exponents 
+    as well as the weights each exponent carries.
+
+    The object is constructed of:
+        *data - an array or list of data points to fit.
+        *gamma_range - a range of exponents valid for fitting. The default is from 1 to 6, since exponent below one is
+            mathematically invalid, and exponents above 6 are very rare. 
+        *xmin and xmax - minimum and maximum data values used for fitting the powerlaw. Default xmin is 1 and default xmax is none.
+            When xmax is none, the function calculates xmax by determining largest data value and adding 10.
+        *discrete=True means that the data consists of discrete values and will be fitted as such. If descrete=False,
+            the data consists of continuous values and will be fitted accordingly. It's important to identify whether your
+            data is discrete or continuous before doing the fitting as normalization function differs between the two.
+        *niters - a number of MCMC iterations performed. The default is 5000, since this is sufficient to acquire the
+            exponent with high confidence and takes around 30 seconds.
+        *sigma - standard deviation of the step size during MCMC. The step size is samples from a gaussian distribution with
+            the mean of zero and standard deviation sigma.
+        *prior - two prior functions are available. Prior='none' (default) produces a flat prior within the specified gamma range.
+            prior='jeffrey' produces a derived jeffrey's prior 1/gamma-1.
+        *mixed - how many different powerlaws the data set is constructed of (up to 3).
+    """
+    def __init__(self, data, gamma_range=[1,6], xmin=1, xmax=None, discrete=True, niters=10000, sigma=0.05, burn_in=1000, prior='flat', mixed=1):
+        self.data=np.array(data) #convert data to numpy array.
+        self.xmin=xmin #xmin
+        if xmax is None: #calculate xmax if unspecified
+            self.xmax=max(self.data)+1
         else:
-            self.xmax=xmax
-        if self.xmin>1 or self.xmax!=np.infty:
+            self.xmax=xmax #xmax if specified
+        if self.xmin>1 or self.xmax!=np.infty: #filter data given xmin and xmax
             self.data=self.data[(self.data>=self.xmin) & (self.data<=self.xmax)]
-        self.n=len(self.data)
-        self.constant=np.sum(np.log(self.data))/self.n
-        self.range=gamma_range
-        self.discrete=discrete
-        self.prior_model=prior[0]
-        self.niters=niters
-        self.sigma=sigma
-        self.prior_exp=prior[1]
-        self.gammas=np.linspace(1.01,self.range[1], 10000)
-        if self.discrete==True:
-            self.log_likelihood=np.array([-self.n*np.log(self.Z(j))-j*np.sum(np.log(self.data)) for j in self.gammas])
+        self.n=len(self.data) #length of data array
+        self.mixed = np.arange(mixed)  # number of powerlaws in data
+        self.params = mixed*2-1
+        self.range=gamma_range #exponent range
+        self.discrete=discrete #is data discrete or continuous?
+        self.prior_model=prior #prior used (flat (default) vs. jeffrey's)
+        self.niters=niters #number of iterations in MCMC
+        self.sigma=sigma #standard deviation of step size in MCMC
+        self.burn=burn_in*self.params
+
+        # make array of possible gammas, given the gamma_range
+        self.gammas = np.linspace(1.01, self.range[1], 10000)
+        self.weight = np.linspace(0.001, 1, 100)
+
+        if self.prior_model == 'jeffrey':
+            #make array of prior function given the jeffrey's prior.
+            self.prior_gamma = [1 / (i - 1) for i in self.gammas]
         else:
-            self.log_likelihood=np.array([-j*np.sum(np.log(self.data))-self.n*np.log(self.xmin)+self.n*j*np.log(self.xmin)+self.n*np.log(j-1) for j in self.gammas])
-        if self.prior_model=='powerlaw':
-            self.prior=[(self.prior_exp-1)/(i**self.prior_exp) for i in self.gammas]
-        if self.prior_model=='exponential':
-            self.prior=[(1/self.prior_exp)*np.exp(-i/self.prior_exp) for i in self.gammas]
-        else:    
-            self.prior=(sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(self.gammas)
-        self.samples=self.posterior()
-        self.best_guess=np.mean(self.samples)
+            #make array of prior function given the flat prior.
+            self.prior_gamma=(sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(self.gammas)
+        self.prior_weight = (sp.stats.uniform(self.range[0], 1 - 0)).pdf(self.weight)
+
+        self.samples_gamma, self.samples_weight = self.posterior()
+        self.bic=self.bayes_ic()
 
     def log_prior(self,gamma):
-        if self.prior_model=='powerlaw':
-            prior_answer=np.log((self.prior_exp-1)/(gamma**self.prior_exp))
-        if self.prior_model=='exponential':
-            prior_answer=np.log((1/self.prior_exp)*np.exp(-gamma/self.prior_exp))
+        """
+        This function calculates prior given target exponent.
+        Input: gamma - a randomly sampled target exponent using MCMC algorithm.
+        Output: prior_answer - calculated log prior given the exponent gamma.
+        """
+        if self.prior_model=='jeffrey':
+            #Jeffrey's prior for continuous powerlaw distribution: prior=1/(gamma-1)
+            prior_answer=np.log(1/(gamma-1))
         else:
+            #Flat prior: prior=1/(b-a)
             prior_answer=np.log((sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(gamma))
         return prior_answer
 
     def Z(self,gamma):
-        """The normalization function Z."""  
-        if np.isfinite(self.xmax):
-            s=0
-            for i in range(int(self.xmin),int(self.xmax)+1):
-                s+=(1.0/(i**gamma))
+        """
+        The normalization function Z for discrete and continuous powerlaw distributions.
+        Input: gamma - a randomly sampled target exponent using MCMC algorithm.
+        Output: s - normalization value.
+        """
+        if self.discrete==True: #when powerlaw is discrete
+            if np.isfinite(self.xmax): #if xmax is NOT infinity:
+                #Calculate zeta from Xmin to Infinity and substract Zeta from Xmax to Inifinity
+                #To find zeta from Xmin to Xmax.
+                s=zeta(gamma, self.xmin)-zeta(gamma, self.xmax)
+            else:
+                #if xmax is infinity, simply calculate zeta from Xmin till infinity.
+                s=zeta(gamma,self.xmin)
         else:
-            s=zeta(gamma,self.xmin)
+            #calculate normalization function when powerlaw is continuous.
+            #s=(xmax^(-gamma+1)/(1-gamma))-(xminx^(-gamma+1)/(1-gamma))
+            s = (self.xmax**(-gamma + 1) / (1 - gamma)) - \
+                (self.xmin**(-gamma + 1) / (1 - gamma))
         return s
     
+    def L (self,gamma_params,weight_params):
+        """
+        Pure powerlaw.
+        This function calculates the log likelihood given a sampled gamma in MCMC algorithm.
+        Input: gamma - a randomly sampled target exponent using MCMC algorithm.
+        Output: lik - log likelihood value.
+        """
+        lik=0
+        for i in range(len(self.mixed)):
+            l=(weight_params[i]*self.data**(-gamma_params[i]))/self.Z(gamma_params[i])
+            lik=lik+l
+        return np.sum(np.log(lik))
 
-    def L(self,gamma):
-        if self.discrete==True:
-            lik = (-self.n*np.log(self.Z(gamma))-gamma*np.sum(np.log(self.data)))
+    def target (self, gamma_params, weight_params):
+        p=0
+        if (np.sum(gamma_params <= self.range[0]) != 0) or (np.sum(gamma_params > self.range[1]) != 0) or (np.sum(weight_params < 0) != 0):
+            p=0
         else:
-            lik = (-gamma * np.sum(np.log(self.data)) - self.n * np.log(self.xmin) + self.n * gamma * np.log(self.xmin) + self.n * np.log(gamma - 1))
-        return lik
-
-
-    def target (self, gamma):
-        if gamma <= self.range[0] or gamma > self.range[1]:
-            p = 0
-        else:
-            p = self.L(gamma)+self.log_prior(gamma)
+            p = self.L(gamma_params,weight_params)+self.log_prior(gamma_params[0])
         return p
-    
 
-    def monte_carlo(self,gamma,sigma,accept,a_array,burn_in=False):
-        gamma_p = gamma + sp.stats.norm(0, sigma).rvs()
-        if self.target(gamma_p)==0:
-            a = -10**8
-        else: 
-            a = min(0,self.target(gamma_p)-self.target(gamma))
-            a_array=np.append(a_array,a)
-        if burn_in==True:
-            if a==0.0:
-                gamma=gamma_p
-        else:
-            
-            if a>np.log(np.random.uniform(0.0, 1.0)):
-                gamma=gamma_p
-                accept=accept+1
-        return gamma, accept, a_array
+    def sample_new(self, gamma_params, weight_params,sigma_g,sigma_w):
+        gamma_params_p = np.zeros(len(self.mixed))
+        weight_params_p = np.zeros(len(self.mixed))
+        for i in range(len(self.mixed)):
+            gamma_params_p[i] = gamma_params[i] + sp.stats.norm(0, sigma_g).rvs()
+            if len(self.mixed)>1:
+                weight_params_p[i]= weight_params[i] + sp.stats.norm(0, sigma_w).rvs()
+            else:
+                weight_params_p[i] = weight_params[i]
+        weight_params_p[-1] = 1 - np.sum(weight_params_p[0:-1])
+        return gamma_params_p, weight_params_p
 
+    def random_walk(self,gamma_params,weight_params,sigma):
+        gamma_params_p, weight_params_p = self.sample_new(gamma_params, weight_params, sigma, sigma)
+        target_p = self.target(gamma_params_p,weight_params_p)
+        target = self.target(gamma_params,weight_params)
+        a=-10**8
+        if target_p != 0:
+            a = min(0, target_p - target)
+        return a, gamma_params_p, weight_params_p
+
+    def burn_in(self,gamma_params,weight_params,sigma):
+        a, gamma_params_p, weight_params_p = self.random_walk(gamma_params,weight_params,sigma)
+        if a == 0.0:
+            gamma_params = gamma_params_p
+            weight_params = weight_params_p
+        return gamma_params, weight_params
+
+    def monte_carlo(self,gamma_params, weight_params,sigma):
+        a, gamma_params_p, weight_params_p = self.random_walk(gamma_params,weight_params,sigma)
+        if a>np.log(np.random.uniform(0.0, 1.0)):
+            gamma_params = gamma_params_p
+            weight_params = weight_params_p
+        return gamma_params, weight_params
 
     def posterior (self):
-        a_array=np.array([])
         sigma_burn = 1.0
-        gamma=1.01
-        accept=0
-        burn_in=1000
-        acceptance=np.array([])
-        sigma_record=np.array([])
+        gamma_params = np.array([1.01] * (len(self.mixed)))
+        weight_params = np.array([1/len(self.mixed)] * (len(self.mixed)))
         #perform a burn in first without recording gamma values
-        for i in range(1,burn_in+1):
-            gamma, accept, a_array=self.monte_carlo(gamma, sigma_burn, accept,a_array, burn_in=True)
+        for i in range(1,self.burn+1):
+            gamma_params, weight_params=self.burn_in(gamma_params,weight_params,sigma_burn)
         #now perform the rest of the sampling while recording gamma values
-        samples = np.zeros(self.niters+1)
-        samples[0]=gamma
+        samples_gamma = np.zeros([len(self.mixed),self.niters+1])
+        samples_gamma[:,0]=gamma_params
+        samples_weight = np.zeros([len(self.mixed), self.niters + 1])
+        samples_weight[:,0] = weight_params
         for i in range(1,self.niters+1):
-            gamma, accept, a_array=self.monte_carlo(gamma, self.sigma, accept, a_array)
-            samples[i] = gamma
-        self.a=a_array
-        return samples
+            gamma_params, weight_params=self.monte_carlo(gamma_params,weight_params,self.sigma)
+            samples_gamma[:,i] = gamma_params
+            samples_weight[:, i] = weight_params
+        return samples_gamma, samples_weight
 
-   
+    def bayes_ic (self):
+        gamma_params=np.mean(self.samples_gamma,axis=1)
+        weight_params = np.mean(self.samples_weight, axis=1)
+        b=np.log(self.n)*(len(self.mixed)*2-1)-2*(self.L(gamma_params,weight_params))
+        return b
+
     @staticmethod
     def plot_fit(bayes_object, label=None, color=None):
         data = bayes_object.data
@@ -252,14 +317,42 @@ class Fit_Bayes(object):
         plt.plot(bayes_object.gammas, bayes_object.prior, color=color, label=label)
         return
     
-    @staticmethod
-    def plot_likelihood(bayes_object, color=None, label=None):
-        plt.plot(bayes_object.gammas,bayes_object.log_likelihood, color=color, label=label)
-        plt.legend()
-        return
+    # @staticmethod
+    # def plot_likelihood(bayes_object, color=None, label=None):
+    #     plt.plot(bayes_object.gammas,bayes_object.log_likelihood, color=color, label=label)
+    #     plt.legend()
+    #     return
     
     @staticmethod
-    def plot_posterior(bayes_object, bins=100, alpha=0.5, color=None, label=None, range=None):
+    def plot_posterior1(bayes_object, bins=100, alpha=0.5, color=None, label=None, range=None):
         plt.hist(bayes_object.samples, bins, alpha=alpha, color=color, label=label, range=range, normed=True)
         plt.legend()
         return
+
+    @staticmethod
+    def plot_posterior2(bayes_object, bins=100, alpha=0.5, color=None, label=None, range=None):
+        plt.hist(bayes_object.samples_1, bins, alpha=alpha,
+                 color='red', label='gamma 1', range=range, normed=True)
+        plt.hist(bayes_object.samples_2, bins, alpha=alpha,
+                 color='blue', label='gamma 2', range=range, normed=True)
+        plt.hist(bayes_object.samples_w, bins, alpha=alpha,
+                 color='black', label='weight 1', range=range, normed=True)
+        plt.legend()
+        return
+
+    @staticmethod
+    def plot_posterior3(bayes_object, bins=100, alpha=0.5, color=None, label=None, range=None):
+        plt.hist(bayes_object.samples_1, bins, alpha=alpha,
+                 color='red', label='gamma 1', range=range, normed=True)
+        plt.hist(bayes_object.samples_2, bins, alpha=alpha,
+                 color='blue', label='gamma 2', range=range, normed=True)
+        plt.hist(bayes_object.samples_3, bins, alpha=alpha,
+                 color='green', label='gamma 3', range=range, normed=True)
+        plt.hist(bayes_object.samples_w1, bins, alpha=alpha,
+                 color='black', label='weight 1', range=range, normed=True)
+        plt.hist(bayes_object.samples_w2, bins, alpha=alpha,
+                 color='gray', label='weight 2', range=range, normed=True)
+        plt.legend()
+        return
+
+

@@ -22,9 +22,9 @@ ML_mean = np.zeros((len(exponent), 50))
 Bayes_mean = np.zeros((len(exponent), 50))
 for i in range(len(exponent)):
     for j in range(50):
-        data = pl.power_law(exponent[i], xmax, sample_size)
-        ML = pl.Fit(data)
-        Bayes = pl.Fit_Bayes(data)
+        data = pl.power_law(exponent[i], xmax, sample_size, discrete=False)
+        ML = pl.Fit(data, discrete=False)
+        Bayes = pl.Fit_Bayes(data, discrete=False, prior=['powerlaw', 0])
         ML_mean[i, j] = np.mean(ML.best_guess)
         Bayes_mean[i, j] = np.mean(Bayes.samples)
 
@@ -46,4 +46,5 @@ plt.ylabel('Fitted Exponent', fontsize=15)
 plt.xlabel('Simulated Exponent', fontsize=15)
 plt.tight_layout()
 
-plt.savefig('MLvsBayes_fits_{}.png'.format(sample_size))
+plt.savefig('MLvsBayes_fits_cont_{}.png'.format(sample_size))
+plt.savefig('MLvsBayes_fits_cont_{}.svg'.format(sample_size))
