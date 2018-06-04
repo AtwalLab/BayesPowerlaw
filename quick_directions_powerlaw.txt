@@ -1,0 +1,31 @@
+# How to use the code
+
+To run the Fit_Bayes code with given defaults:
+
+    obj_name=Fit_Bayes(data)
+
+where data is a list or array of numbers from 1 to infinity.
+
+
+Defaults:
+
+    gamma_range=[1,6] - so far the default prior is flat within the exponent range 1 to 6. Change the range by inputing your own numbers a and b: gamma_range=[a,b].
+
+    xmin=1,xmax=np.infty - will fit the whole distribution. Rectrict the fit by inputing your own xmin and xmax, e.g. xmin=3,xmax=100.
+
+    descrete=True - assumes that the distribution being fitted is discrete. If distribution is continuous change - discrete=False.
+
+    niters=5000 - MCMC will perform 5000 iterations. Change to a desired number of iterations, e.g. niters=1000.
+
+    sigma=0.05 - default variance for selecting step size from gaussian distribution during MCMC.
+    
+    burn_in=1000 - default number of iterations for burn in MCMC.
+    
+    
+    
+Getting the answers:
+
+    obj_name.samples_gamma[0]
+    
+To get the best exponent take the mean of that.
+To plot the posterior, histogram it!
