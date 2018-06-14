@@ -1,3 +1,4 @@
+
 from scipy.optimize import newton
 from scipy.special import zeta
 import scipy as sp
@@ -7,21 +8,40 @@ import matplotlib.pyplot as plt
 
 
 
-def power_law(exponent, xmax, sample_size, discrete=True):
+def power_law(exponent, xmax, sample_size, xmin=1, discrete=True):
     """This function simulates a dataset that follows a powerlaw
-    distribution with a given exponent and xmin>=1.
-    Inputs:
-    -exponent = exponent of the powerlaw distribution equation (y=1/x^exponent),
-    -max_clone_size = the maximum possible x value in the simulated dataset.
-    -sample_size = wanted number of datapoints in the dataset.
-    -discrete = if True - discrete power law is simulated. If False - continuous powerlaw.
-    Returns:
-    -numpy array of x that has a size of sample_size parameter."""
+    distribution with a given exponent and xmax.
+
+
+    parameters
+    ----------
+
+    exponent: (float>1) 
+        exponent of the powerlaw distribution equation (y=1/x^exponent).
+
+    xmax: (int or float > xmin)
+        the maximum possible x value in the simulated dataset.
+
+    sample_size: (int>5)
+        samples size of the simulated dataset.
+
+    xmin: (int or float >=1)
+        the minimum possible x value in the simulated dataset (default: 1).
+
+    discrete: (bool) 
+        whether the simulated powerlaw contains discrete (True) or continuous (False) values (default: True)
+    
+    returns
+    -------
+
+    1D array of X'es that has a size of sample_size parameter.
+    
+    """
     if discrete==True:
     #arrange numpy array of number from 1 to xmax+1 in the float format.
-    	x = np.arange(1, xmax+1, dtype='float')
+    	x = np.arange(xmin, xmax+1, dtype='float')
     else:
-    	x = np.linspace(1, xmax, xmax**2)
+    	x = np.linspace(xmin, xmax, xmax**2)
     #plug each value into powerlaw equation to start generating probability mass function (pmf)
     pmf = 1/x**exponent
     #divide each pmf value by the sum of all the pmf values. The sum of the resulting
@@ -32,44 +52,148 @@ def power_law(exponent, xmax, sample_size, discrete=True):
     return np.random.choice(x, sample_size, p=pmf)
 
 
-class Fit(object):
+class fit_ml(object):
+    """This function fits the data to powerlaw distribution and outputs the exponent
+    using the maximum likelihood and Newton-Raphson approach.
 
-    def __init__(self, data, initial_guess=np.linspace(1,5,10), xmin=1, xmax=None, discrete=True):
-        self.data=data
-        self.xmin=xmin
+    parameters
+    ----------
+    data: (list or np.array of numbers)
+        An array of data from the powerlaw that is being fitted here y=x^(-gamma)/Z.
+        All values must be integers or floats from 1 to infinity.
+
+    initial_guess: (list [lower range>=1, upper range, number of initial guesses])
+        a list for generating a 1D array containing a variation of initial guesses for 
+        Newton-Raphson algorithm.
+
+    min: (int or float >=1)
+        The lowest value from the data included in the powerlaw fit. 
+        Default value is "None", in which case the minimum value observed in the data is used.
+    
+    xmax: (int or float >= xmin)
+        The highest value from the data included in the powerlaw fit. 
+        Default value is "None", in which case the maximum value observed in the data is used.
+        To set xmax to infinity use xmax=np.infty.
+    
+    discrete: (bool) 
+        Whether or not the powerlaw is discrete or continuous.
+        Default True, in which case powerlaw is assumed to be discrete.
+        The distinction is important when estimating partition function Z.    
+
+    attributes
+    ----------
+    
+    n: 
+        Sample size of the data.
+        (int>5)
+
+    constant:
+        a constant calculated to be added to 1st order Z differential prior to
+        preforming Newton-Raphson algorithm.
+        (float)
+
+    initial_guess:
+        an array of initial guesses used in Newton-Raphson algorithm.
+        (1D array)
+
+    """
+
+    def __init__(self, 
+                data, 
+                initial_guess=[1,6,10], 
+                xmin=None, 
+                xmax=None, 
+                discrete=True):
+
+        self.data=np.array(data)
+
+        #xmin
+        if xmin is None:
+            self.xmin = min(self.data)
+        else:
+            self.xmin = xmin
+
         if xmax is None:
             self.xmax=max(self.data)+10.0
         else:
             self.xmax=xmax
+
         if self.xmin>1 or self.xmax!=np.infty:
             self.data=self.data[(self.data>=self.xmin) & (self.data<=self.xmax)]
         self.n=len(self.data)
         self.constant=np.sum(np.log(self.data))/self.n
         self.discrete=discrete
-        if self.discrete==True:
-            self.initial_guess=initial_guess
-            self.best_guess=self.Guess_discrete()
-        else:
-            self.best_guess=self.Guess_continuous()
+        self.initial_guess = np.linspace(
+            initial_guess[0], initial_guess[1], initial_guess[2])
 
-    def Z(self,gamma):
-        """The normalization function Z."""  
-        if np.isfinite(self.xmax):
-            s=0
-            for i in range(int(self.xmin),int(self.xmax)+1):
-                s+=(1.0/(i**gamma))
+    def Z(self, gamma):
+        """
+        Partition function Z for discrete and continuous powerlaw distributions.
+
+        parameters
+        ----------
+        gamma: (float)
+            exponent guess.
+
+        returns
+        ------
+        s:
+            Partition value.
+
+        """
+        
+        if self.discrete == True:  # when powerlaw is discrete
+            if np.isfinite(self.xmax):  # if xmax is NOT infinity:
+                #Calculate zeta from Xmin to Infinity and substract Zeta from Xmax to Infinity
+                #To find zeta from Xmin to Xmax.
+                s = zeta(gamma, self.xmin) - zeta(gamma, self.xmax)
+            else:
+                #if xmax is infinity, simply calculate zeta from Xmin till infinity.
+                s = zeta(gamma, self.xmin)
         else:
-            s=zeta(gamma,self.xmin)
+            #calculate normalization function when powerlaw is continuous.
+            #s=(xmax^(-gamma+1)/(1-gamma))-(xminx^(-gamma+1)/(1-gamma))
+            s = (self.xmax**(-gamma + 1) / (1 - gamma)) - \
+                (self.xmin**(-gamma + 1) / (1 - gamma))
         return s
 
     def F(self,gamma):
-        """The optimization function F(gamma). C is the second term in the definition of F(gamma) and is independent of
-        gamma. C need to be defined before running the function. Function Z must be run beforehand as well."""
+        """The optimization function. 
+        
+        parameters
+        ----------
+
+        gamma: (float)
+            exponent guess.
+
+        returns
+        -------
+
+            First order Z differential plus constant attribute.
+
+        """
         h = 1e-8
         Z_prime = (self.Z(gamma+h) - self.Z(gamma-h))/(2*h)
         return (Z_prime/self.Z(gamma))+self.constant
 
-    def Guess_discrete(self):
+    def Guess(self):
+        """
+        Master function that performs Newton-Raphson algorithm and determins best
+        exponent guess via maximum likelihood.
+
+        parameters
+        ----------
+
+        None.
+
+        returns
+        -------
+
+        best_guess: (1D array)
+            an array containing best exponent guesses given the maximum likelihood.
+            Length of array will be more than 1 if same likelihood value is associated
+            with more than one exponent guess. 
+        """
         best_guess=np.zeros(len(self.initial_guess))
         for i in range(len(self.initial_guess)):
             try:
@@ -86,13 +210,10 @@ class Fit(object):
             best_guess=best_guess[np.where(log_likelihood == max(log_likelihood))]
         return best_guess
 
-    def Guess_continuous(self):
-        return 1+self.n/(np.sum(np.log(self.data))-self.n*np.log(self.xmin))
-
-
-class Fit_Bayes(object):
-    """This function fits the data to powerlaw distribution and outputs the exponent. 
-    If the data consists of mixture of 2 or 3 powerlaws, the function will identify the mixture of exponents 
+class fit_bayes(object):
+    """This function fits the data to powerlaw distribution and outputs the exponent
+    using Bayesian inference (markov chain monte carlo metropolis-hastings algorithm). 
+    If the data consists of mixture more than 1 powerlaws, if specified the function will identify the mixture of exponents 
     as well as the weights each exponent carries.
 
     parameters
@@ -123,10 +244,15 @@ class Fit_Bayes(object):
     niters: (int) 
         Number of MCMC iterations performed. The default is 10000.
     
-    sigma: (float>0)
-        Standard deviation of the sampling step size during MCMC for both gamma and weights.
+    sigma: ([float>0,float>0])
+        Standard deviation of the sampling step size during MCMC for both gamma (first value) and weight (second value).
         Samples are taken from a gaussian distribution with a mean of zero.
-        Default value is 0.05, which is seen to perform with good efficiency.
+        Default value is 0.05 for both, which is seen to perform with good efficiency.
+
+    sigma_burn: ([float>0,float>0])
+        Standard deviation of the sampling step size during MCMC burn in for both gamma (first value) and weight (second value).
+        Samples are taken from a gaussian distribution with a mean of zero.
+        Default value is 1.0 for both, which quickly travels to a correct value range.
     
     burn_in (int):
         Number of MCMC iterations performs during burn in. 
@@ -171,6 +297,22 @@ class Fit_Bayes(object):
         An array of 100 weight values from 0 to 1 for plotting prior.
         (1D np.array)
 
+    sigma_g: 
+        Standard deviation of the sampling step size during MCMC for gamma.
+        (float>0)
+
+    sigma_w: 
+        Standard deviation of the sampling step size during MCMC for weight.
+        (float>0)
+
+    sigma_burn_g: 
+        Standard deviation of the sampling step size during MCMC burn in for gamma.
+        (float>0)
+
+    sigma_burn_w: 
+        Standard deviation of the sampling step size during MCMC burn in for weight.
+        (float>0)
+
     prior_gamma:
         An array of probabilities of each value in gammas for plotting prior.
         (1D np.array)
@@ -187,9 +329,10 @@ class Fit_Bayes(object):
                 xmax=None, 
                 discrete=True, 
                 niters=10000, 
-                sigma=0.05,
+                sigma=[0.05,0.05],
+                sigma_burn=[1.0,1.0],
                 burn_in=1000, 
-                prior='flat', 
+                prior='jeffrey', 
                 mixed=1):
 
         #convert data to numpy array in case input is a list.
@@ -203,7 +346,7 @@ class Fit_Bayes(object):
 
         #xmax
         if xmax is None:
-            self.xmax=max(self.data)+1
+            self.xmax=max(self.data)+10.0
         else:
             self.xmax=xmax
 
@@ -218,7 +361,10 @@ class Fit_Bayes(object):
         self.discrete=discrete #is data discrete or continuous
         self.prior_model=prior #prior used (jeffrey's (default) or flat)
         self.niters = niters * self.params  # number of iterations in MCMC scaled given number of parameters
-        self.sigma=sigma #standard deviation of step size in MCMC
+        self.sigma_g= sigma[0] #standard deviation of gamma step size in MCMC
+        self.sigma_w = sigma[1]  # standard deviation of weight step size in MCMC
+        self.sigma_burn_g = sigma_burn[0] #standard deviation of gamma step size in burn in
+        self.sigma_burn_w = sigma_burn[1] #standard deviation of weight step size in burn in
         self.burn=burn_in*self.params # number of iterations in MCMC burn in scaled given number of parameters
 
         # make array of possible gammas, given the gamma_range, and an array of possible weights.
@@ -227,13 +373,13 @@ class Fit_Bayes(object):
 
         if self.prior_model == 'jeffrey':
             #make array of prior function given the jeffrey's prior.
-            self.prior_gamma = [1 / (i - 1) for i in self.gammas] #(FIX THIS TO CORRECT PRIOR)
+            self.prior_gamma = [self.Z_jeffrey(i) for i in self.gammas]
         else:
             #make array of prior function given the flat prior.
             self.prior_gamma=(sp.stats.uniform(self.range[0],self.range[1]-self.range[0])).pdf(self.gammas)
         
         #make array of prior function for weights (flat prior).
-        self.prior_weight = (sp.stats.uniform(self.range[0], 1 - 0)).pdf(self.weight)
+        self.prior_weight = (sp.stats.uniform(0, 1)).pdf(self.weight)
 
 
     def Z(self,gamma):
@@ -267,19 +413,57 @@ class Fit_Bayes(object):
         return s
 
     def Z_prime(self,gamma):
+        """
+        This function calculates first differential of partition function Z.
+
+        parameters
+        ----------
+        gamma: (float)
+            Randomly sampled target exponent.
+
+        returns
+        ------
+        First differential of the Z function.
+
+        """
 
         h = 1e-8
-        s = (self.Z(gamma + h) - self.Z(gamma - h)) / (2 * h)
-        return s
+        return (self.Z(gamma + h) - self.Z(gamma - h)) / (2 * h)
 
     def Z_prime2(self, gamma):
-        h = 1e-8
-        s = (self.Z(gamma + 2*h) - 2*self.Z(gamma) + self.Z(gamma - 2*h)) / (4*(h**2))
-        return s
+        """
+        This function calculates second differential of partition function Z.
+
+        parameters
+        ----------
+        gamma: (float)
+            Randomly sampled target exponent.
+
+        returns
+        ------
+        Second differential of the Z function.
+
+        """
+
+        h = 1e-4
+        return (self.Z(gamma + h) - 2*self.Z(gamma) + self.Z(gamma - h)) / (h**2)
 
     def Z_jeffrey(self,gamma):
-        z=np.sqrt((-1)*(-self.Z_prime2(gamma))/self.Z(gamma)+self.Z_prime(gamma)**2/self.Z(gamma)**2)
-        return z
+        """
+        This function calculates Jeffrey's prior for a given exponent.
+
+        parameters
+        ----------
+        gamma: (float)
+            Randomly sampled target exponent.
+
+        returns
+        ------
+        Calculated Jeffrey's prior.
+
+        """
+
+        return np.sqrt((self.Z_prime2(gamma))/self.Z(gamma)-self.Z_prime(gamma)**2/self.Z(gamma)**2)
 
     def log_prior(self, gamma):
         """
@@ -320,9 +504,7 @@ class Fit_Bayes(object):
 
         returns
         -------
-
-        lik: 
-            calculated log likelihood value.
+        Calculated log likelihood value.
 
         """
 
@@ -334,7 +516,9 @@ class Fit_Bayes(object):
 
     def target (self, gamma_params, weight_params):
         """
-        
+        This function calculates target values for comparing existing exponents and weight to
+        newly samples exponents and weights. Target for given parameters is equal to
+        log of (likelihood x prior).
 
         parameters
         ----------
@@ -349,7 +533,7 @@ class Fit_Bayes(object):
         -------
 
         p: 
-            calculated target values - log of (likelihood x prior)
+            calculated target value.
 
         """
         p=0
@@ -361,6 +545,8 @@ class Fit_Bayes(object):
 
     def sample_new(self, gamma_params, weight_params,sigma_g,sigma_w):
         """
+        This function performs random sampling of gammas and weights given the initial
+        gamma and weight values.
 
         parameters
         ----------
@@ -371,17 +557,20 @@ class Fit_Bayes(object):
         weight_params: (1D np.array)
             Array of randomly sampled target weights for each powerlaw in the data.
 
-        sigma_g:
+        sigma_g: (float>0)
+            Standard deviation of the sampling step size during MCMC for gamma.
 
-        sigma_w:
+        sigma_w: (float>0)
+            Standard deviation of the sampling step size during MCMC for weights.
 
         returns
         -------
 
         gamma_params_p: 
+            a 1D array of newly sampled exponent values.
         
         weight_params_p:
-
+            a 1D array of newly sampled weight values.
 
         """
         gamma_params_p = np.zeros(len(self.mixed))
@@ -395,9 +584,11 @@ class Fit_Bayes(object):
         weight_params_p[-1] = 1 - np.sum(weight_params_p[0:-1])
         return gamma_params_p, weight_params_p
 
-    def random_walk(self,gamma_params,weight_params,sigma):
+    def random_walk(self,gamma_params,weight_params,sigma_g,sigma_w):
         """
-
+        This function samples new target exponent and weight values using sample_new function
+        and calculates acceptance values to compare the initial parameter values to the 
+        newly sampled ones.
 
         parameters
         ----------
@@ -408,20 +599,27 @@ class Fit_Bayes(object):
         weight_params: (1D np.array)
             Array of randomly sampled target weights for each powerlaw in the data.
 
-        sigma: (float>0)
+        sigma_g: (float>0)
+            Standard deviation of gamma step size during random sampling.
+
+        sigma_w: (float>0)
+            Standard deviation of weight step size during random sampling.
 
         returns
         -------
 
         a: 
+            acceptance value to compare which parameter values are more likely to result in
+            a more accurate fit.
 
         gamma_params_p:
+            1D array of randomly sampled exponents.
 
         weight_params_p:
-
+            1D array of randomly sampled weights.
 
         """
-        gamma_params_p, weight_params_p = self.sample_new(gamma_params, weight_params, sigma, sigma)
+        gamma_params_p, weight_params_p = self.sample_new(gamma_params, weight_params,sigma_g,sigma_w)
         target_p = self.target(gamma_params_p,weight_params_p)
         target = self.target(gamma_params,weight_params)
         a=-10**8
@@ -429,9 +627,11 @@ class Fit_Bayes(object):
             a = min(0, target_p - target)
         return a, gamma_params_p, weight_params_p
 
-    def burn_in(self,gamma_params,weight_params,sigma):
+    def burn_in(self,gamma_params,weight_params):
         """
-
+        This function preforms the burn in part of the MCMC algorithm that will get the 
+        initial values to the roughly correct range for fitting. The parameters accepted
+        during burn in are not included in the final samples array.
 
         parameters
         ----------
@@ -442,26 +642,27 @@ class Fit_Bayes(object):
         weight_params: (1D np.array)
             Array of randomly sampled target weights for each powerlaw in the data.
 
-        sigma: (float>0)
 
         returns
         -------
 
         gamma_params:
+            1D array of accepted exponent values.
 
         weight_params:
-
+            1D array of accepted weight values.
 
         """
-        a, gamma_params_p, weight_params_p = self.random_walk(gamma_params,weight_params,sigma)
+        a, gamma_params_p, weight_params_p = self.random_walk(gamma_params,weight_params,self.sigma_burn_g,self.sigma_burn_w)
         if a == 0.0:
             gamma_params = gamma_params_p
             weight_params = weight_params_p
         return gamma_params, weight_params
 
-    def monte_carlo(self,gamma_params, weight_params,sigma):
+    def monte_carlo(self,gamma_params, weight_params):
         """
-
+        This function preforms the full MCMC algorithm. The parameters accepted in this part
+        of MCMC will be saved in the final samples array.
 
         parameters
         ----------
@@ -472,18 +673,18 @@ class Fit_Bayes(object):
         weight_params: (1D np.array)
             Array of randomly sampled target weights for each powerlaw in the data.
 
-        sigma: (float>0)
 
         returns
         -------
 
         gamma_params:
+            1D array of accepted exponent values.
 
         weight_params:
-
+            1D array of accepted weight values.
 
         """
-        a, gamma_params_p, weight_params_p = self.random_walk(gamma_params,weight_params,sigma)
+        a, gamma_params_p, weight_params_p = self.random_walk(gamma_params,weight_params,self.sigma_g,self.sigma_w)
         if a>np.log(np.random.uniform(0.0, 1.0)):
             gamma_params = gamma_params_p
             weight_params = weight_params_p
@@ -491,7 +692,8 @@ class Fit_Bayes(object):
 
     def posterior (self):
         """
-
+        A master function that executes burn in and monte carlo algorithms while
+        storing the accepted parameter values into the final samples array.
 
         parameters
         ----------
@@ -501,46 +703,56 @@ class Fit_Bayes(object):
         returns
         -------
 
-        gamma_params:
+        samples_gamma:
+            A 2D array of accepted exponents in each iteration after burn in.
+            Rows - each powerlaw in the mixture.
+            Columns - accepted exponent each iteration.
 
-        weight_params:
-
+        samples_weight:
+            A 2D array of accepted weights in each iteration after burn in.
+            Rows - each powerlaw in the mixture.
+            Columns - accepted weight each iteration.
 
         """
-        sigma_burn = 1.0
         gamma_params = np.array([self.range[0]] * (len(self.mixed)))
         weight_params = np.array([1/len(self.mixed)] * (len(self.mixed)))
         #perform a burn in first without recording gamma values
         for i in range(1,self.burn+1):
-            gamma_params, weight_params=self.burn_in(gamma_params,weight_params,sigma_burn)
+            gamma_params, weight_params=self.burn_in(gamma_params,weight_params)
         #now perform the rest of the sampling while recording gamma values
         samples_gamma = np.zeros([len(self.mixed),self.niters+1])
         samples_gamma[:,0]=gamma_params
         samples_weight = np.zeros([len(self.mixed), self.niters + 1])
         samples_weight[:,0] = weight_params
         for i in range(1,self.niters+1):
-            gamma_params, weight_params=self.monte_carlo(gamma_params,weight_params,self.sigma)
+            gamma_params, weight_params=self.monte_carlo(gamma_params,weight_params)
             samples_gamma[:,i] = gamma_params
             samples_weight[:, i] = weight_params
         return samples_gamma, samples_weight
 
     def bic (self, samples_gamma, samples_weight):
         """
-
+        This function calculates the Beyesian Information Criteria for
+        determining the number of parameters most optimal for fittin the dataset.
 
         parameters
         ----------
 
         samples_gamma: (2D np.array)
+            accepted exponents in each iteration after burn in.
+            Rows - each powerlaw in the mixture.
+            Columns - accepted exponent each iteration.
 
         samples_weight: (2D np.array)
+            accepted weights in each iteration after burn in.
+            Rows - each powerlaw in the mixture.
+            Columns - accepted weight each iteration.
 
         returns
         -------
 
         b:
-            Beyesian information criteria (BIC) value.
-
+            Beyesian Information Criteria (BIC) value.
 
         """
         gamma_params=np.mean(samples_gamma,axis=1)
@@ -548,66 +760,162 @@ class Fit_Bayes(object):
         b=np.log(self.n)*(len(self.mixed)*2-1)-2*(self.L(gamma_params,weight_params))
         return b
 
+    def powerlawpdf(self,final_gamma):
+        """
+        The power law probability function for generating the best fit curve.
 
-    @staticmethod
-    def plot_fit(bayes_object, label=None, color=None):
-        data = bayes_object.data
-        exponent = bayes_object.best_guess
-        xmin = bayes_object.xmin
-        xmax = bayes_object.xmax
-        discrete=bayes_object.discrete
-        
+        parameters
+        ----------
+        final_gamma: (float)
+            Final exponent used to generate the best fit curve. For best results
+            use the mean of posterior samples.
 
-        def Z(exponent,xmin,xmax):
-            """The normalization function Z.
-            Note that default arguments of xmin and xmax make Z equivalent to Riemann zeta function which is already
-            implemented in Scipy as zeta(gamma,1)"""
-            if np.isfinite(xmax):
-                s=0.0
-                for i in range(int(xmin),int(xmax+1)):
-                    s+=(1.0/(i**exponent))
-            else:
-                s=zeta(exponent,xmin)
-            return s
+        returns
+        -------
+        xp: (1D array)
+            array of X's arranged from xmin to xmax of the data.
+
+        yp: (1D array)
+            array of probabilities for each X given the final exponent.
         
-        def powerlawpdf(data, exponent, xmin):
-            """The power law probability function
-            Input: x - array of clone sizes; gamma - desired exponent.
-            Output: array of probabilities of each clone size x."""
-            if discrete==True:
-                powerlaw=(data**(-exponent))/Z(exponent,xmin,xmax)
-            else:
-                powerlaw=((data)**(-exponent))*(xmin**(exponent-1)/(exponent-1))
-            return powerlaw
+        """
+
+        xp = np.arange(self.xmin, self.xmax)
+        yp=(xp**(-final_gamma)) / self.Z(final_gamma)
+
+        return xp, yp
+
+    def plot_fit(self, 
+                gamma_mean, 
+                label=None, 
+                data_color=None,
+                edge_color=None, 
+                fit_color=None, 
+                scatter_size=10,
+                line_width=1,
+                fit=True,
+                log=True):
+        """
+        Function for plotting the date as a power law distribution on a log log scale
+        along with the best fit.
+
+        parameters
+        ----------
+
+        gamma_mean: (float)
+            Final exponent used to generate the best fit curve. For best results
+            use the mean of posterior samples.
+
+        label: (str)
+            curve label.
+
+        data color: (str)
+            color of the data scatter plot.
+
+        edge_color: (str)
+            color of the scatter marker edge.
+
+        fit_color: (str)
+            color of the best fit curve.
         
-        if discrete==True:
-            unique, counts = np.unique(data, return_counts=True)
-            frequency=counts/np.sum(counts)
-            xpmax=((Z(exponent,xmin,xmax)/len(data))**(-1/exponent))*2
-            xp=np.arange(np.min(data),xpmax)
-            plt.loglog(unique,frequency,'o', color=color, markeredgecolor='black', label=label)
-            plt.plot(xp,powerlawpdf(xp,exponent,xmin), color=color, linewidth=2)
-            plt.legend()
+        scatter_size: (int or float)
+            scatter marker size.
+
+        line_width: (int or float)
+            width of the best fit curve.
+
+        fit: (bool)
+            Whether to plot the best fit curve or not (default True).
+
+        log: (bool)
+            Whether to plot in the log scale or not (default True).
+
+        returns
+        -------
+
+        None.
+
+        """
+        if self.discrete:
+            unique, counts = np.unique(self.data, return_counts=True)
+            frequency = counts / np.sum(counts)
         else:
-            xp=np.arange(np.min(data),np.max(data)+1)
-            plt.hist(data, bins=50, color=color, label=label)
-            plt.plot(xp,powerlawpdf(xp,exponent,xmin), color=color, linewidth=2)
+            yx = plt.hist(self.data, bins=1000)
+            counts_pre = (yx[0])
+            unique_pre = ((yx[1])[0:-1])
+            unique = unique_pre[counts_pre != 0]
+            counts = counts_pre[counts_pre != 0]
+            frequency = counts / np.sum(counts)
+
+        X, Y = self.powerlawpdf(gamma_mean)
+        if log:
             plt.xscale('log')
             plt.yscale('log')
-            plt.legend()
-        
+        plt.scatter(unique,frequency, s=scatter_size ,color=data_color, edgecolor=edge_color, label=label)
+        if fit:
+            plt.plot(X,Y, color=fit_color, linewidth=line_width)
+
         return 
         
         
-    @staticmethod
-    def plot_prior(bayes_object, color=None, label=None):
-        plt.plot(bayes_object.gammas, bayes_object.prior, color=color, label=label)
+    def plot_prior(self, color=None, label=None):
+        """
+        Function for plotting prior for gammas.
+
+        parameters
+        ----------
+
+        color: (str)
+            color of the curve
+        
+        label: (str)
+            label of the curve
+
+        returns
+        -------
+
+        None.
+
+        """
+        plt.plot(self.gammas, self.prior_gamma, color=color, label=label)
         return
     
-    @staticmethod
-    def plot_posterior1(bayes_object, bins=100, alpha=0.5, color=None, label=None, range=None):
-        plt.hist(bayes_object.samples, bins, alpha=alpha, color=color, label=label, range=range, normed=True)
-        plt.legend()
+
+    def plot_posterior(self, samples, bins=100, alpha=None, color=None, label=None, range=None, normed=True):
+        """
+        Function for plotting posterior histogram.
+
+        parameters
+        ----------
+        samples: (1D array)
+            an array of accepted exponents during the MCMC algorithm.
+        
+        bins: (int)
+            number of bins used for the histogram (default: 100).
+        
+        alpha: (0<=float<=1)
+            transparency of the histogram.
+
+        color: (str)
+            color of the histogram.
+        
+        label: (str)
+            label of the histogram.
+        
+        range: (tuple)
+            range of histogram's X axis.
+        
+        normed: (bool)
+            whether the histogram is normalized or not (default: True)
+
+        returns
+        -------
+
+        None.
+
+        """
+
+        plt.hist(samples, bins, alpha=alpha, color=color, label=label, range=range, normed=normed)
         return
 
     
