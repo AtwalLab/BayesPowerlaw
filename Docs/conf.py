@@ -16,10 +16,12 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-
+import sys
+sys.path.append('../')
+import BayesPowerlaw
 # -- Project information -----------------------------------------------------
 
-project = 'powerlaw'
+project = 'BayesPowerlaw'
 copyright = '2018, Kristina Grigaityte, Gurinder Atwal'
 author = 'Kristina Grigaityte, Gurinder Atwal'
 
@@ -38,9 +40,9 @@ release = '0.0.1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'sphinx.ext.autodoc',
-]
+extensions = ['sphinx.ext.mathjax',
+              'sphinx.ext.autodoc',
+              'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -75,7 +77,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'bizstyle'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -102,7 +104,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'powerlawdoc'
+htmlhelp_basename = 'BayesPowerlawdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -129,7 +131,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'powerlaw.tex', 'powerlaw Documentation',
+    (master_doc, 'BayesPowerlaw.tex', 'BayesPowerlaw Documentation',
      'Kristina Grigaityte, Gurinder Atwal', 'manual'),
 ]
 
@@ -139,7 +141,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'powerlaw', 'powerlaw Documentation',
+    (master_doc, 'BayesPowerlaw', 'BayesPowerlaw Documentation',
      [author], 1)
 ]
 
@@ -150,8 +152,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'powerlaw', 'powerlaw Documentation',
-     author, 'powerlaw', 'One line description of project.',
+    (master_doc, 'BayesPowerlaw', 'BayesPowerlaw Documentation',
+     author, 'BayesPowerlaw', 'One line description of project.',
      'Miscellaneous'),
 ]
 

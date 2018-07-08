@@ -267,6 +267,10 @@ class fit_bayes(object):
     mixed: (int>0) 
         Number of distinct powerlaws the dataset is thought to consist of. Default is 1.
 
+    fit: (bool)
+        Whether or not to perform fitting while creating the object.
+        Not necessary if only desired to plot a power law with now fit.
+        Default True.
 
     attributes
     ----------
@@ -321,10 +325,21 @@ class fit_bayes(object):
         An array of probabilities of each value in weights for plotting prior.
         (1D np.array)
 
+    gamma_posterior:
+        A 2D array of accepted exponents in each iteration after burn in.
+        Rows - each powerlaw in the mixture.
+        Columns - accepted exponent each iteration.
+        (2D np.array)
+
+    weight_posterior:
+        A 2D array of accepted weights in each iteration after burn in.
+        Rows - each powerlaw in the mixture.
+        Columns - accepted weight each iteration.
+        (2D np.array)
     """
     def __init__(self, 
                 data, 
-                gamma_range=[1.01,6.0], 
+                gamma_range=[1.01,10.0], 
                 xmin=None, 
                 xmax=None, 
                 discrete=True, 
@@ -333,7 +348,8 @@ class fit_bayes(object):
                 sigma_burn=[1.0,1.0],
                 burn_in=1000, 
                 prior='jeffrey', 
-                mixed=1):
+                mixed=1,
+                fit=True):
 
         #convert data to numpy array in case input is a list.
         self.data=np.array(data) 
@@ -380,6 +396,9 @@ class fit_bayes(object):
         
         #make array of prior function for weights (flat prior).
         self.prior_weight = (sp.stats.uniform(0, 1)).pdf(self.weight)
+
+        if fit:
+            self.gamma_posterior, self.weight_posterior = self.posterior()
 
 
     def Z(self,gamma):
@@ -760,7 +779,7 @@ class fit_bayes(object):
         b=np.log(self.n)*(len(self.mixed)*2-1)-2*(self.L(gamma_params,weight_params))
         return b
 
-    def powerlawpdf(self,final_gamma):
+    def powerlawpdf(self,final_gamma,xmin=None):
         """
         The power law probability function for generating the best fit curve.
 
@@ -779,8 +798,12 @@ class fit_bayes(object):
             array of probabilities for each X given the final exponent.
         
         """
-
-        xp = np.arange(self.xmin, self.xmax)
+        if xmin==None:
+            xmin=self.xmin
+        if self.discrete:
+            xp = np.arange(xmin,self.xmax)
+        else:
+            xp = np.linspace(xmin,self.xmax, 100)
         yp=(xp**(-final_gamma)) / self.Z(final_gamma)
 
         return xp, yp
@@ -794,7 +817,8 @@ class fit_bayes(object):
                 scatter_size=10,
                 line_width=1,
                 fit=True,
-                log=True):
+                log=True,
+                xmin=None):
         """
         Function for plotting the date as a power law distribution on a log log scale
         along with the best fit.
@@ -840,20 +864,20 @@ class fit_bayes(object):
             unique, counts = np.unique(self.data, return_counts=True)
             frequency = counts / np.sum(counts)
         else:
-            yx = plt.hist(self.data, bins=1000)
+            yx = plt.hist(self.data, bins=1000,normed=True)
             counts_pre = (yx[0])
             unique_pre = ((yx[1])[0:-1])
             unique = unique_pre[counts_pre != 0]
-            counts = counts_pre[counts_pre != 0]
-            frequency = counts / np.sum(counts)
+            frequency = counts_pre[counts_pre != 0]
+            # frequency = counts / np.sum(counts)
 
-        X, Y = self.powerlawpdf(gamma_mean)
+        X, Y = self.powerlawpdf(gamma_mean,xmin)
         if log:
             plt.xscale('log')
             plt.yscale('log')
-        plt.scatter(unique,frequency, s=scatter_size ,color=data_color, edgecolor=edge_color, label=label)
+        plt.scatter(unique,frequency, s=scatter_size ,color=data_color, edgecolor=edge_color)
         if fit:
-            plt.plot(X,Y, color=fit_color, linewidth=line_width)
+            plt.plot(X,Y, color=fit_color, linewidth=line_width,label=label)
 
         return 
         
@@ -919,5 +943,29 @@ class fit_bayes(object):
         return
 
     
+def demo():
+    """
+    
+    """
+    import os
+    example_dir = os.path.dirname(__file__)
+
+    data=np.loadtxt('tweet_count.txt').astype(int)
+    fit=fit_bayes(data)
+
+    plt.figure(figsize=(6,4))
+    plot_fit(np.mean(fit.gamma_posterior[0]),fit_color='black',scatter_size=100,data_color='gray',edge_color='black',line_width=2)
+    plt.ylim(10**-5, 10**0)
+    plt.xlabel('likes', fontsize=16)
+    plt.ylabel('frequency', fontsize=16)
+    plt.title('Likes per Tweet', fontsize=18)
+    plt.tight_layout()
+    
+    plt.figure(figsize=(6,4))
+    plot_posterior(fit.gamma_posterior,range=[1.6,1.9])
+    plt.xlabel('posterior', fontsize=16)
+    plt.ylabel('exponent', fontsize=16)
+    plt.title('Posterior for Likes per Tweet', fontsize=18)
+    plt.tight_layout()
 
 
