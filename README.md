@@ -5,12 +5,12 @@ BayesPowerlaw fits single or mixtures of power law distributions and estimate th
 
 Requirements:
 
-*Python >= 3.6.2
-*numpy >= 1.10.1
-*scipy >= 1.0.0
-*matplotlib >= 2.0.0
+* Python >= 3.6.2
+* numpy >= 1.10.1
+* scipy >= 1.0.0
+* matplotlib >= 2.0.0
 <br> 
 
-*Documentation: http://BayesPowerlaw.readthedocs.org
-*Github: https://github.com/atwallab/BayesPowerlaw
-*PyPI: https://pypi.python.org/pypi/BayesPowerlaw
+* Documentation: http://BayesPowerlaw.readthedocs.org
+* Github: https://github.com/atwallab/BayesPowerlaw
+* PyPI: https://pypi.python.org/pypi/BayesPowerlaw
