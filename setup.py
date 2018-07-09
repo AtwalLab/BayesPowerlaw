@@ -1,4 +1,4 @@
-import setuptools
+from setuptools import setup
 
 
 def readme():
@@ -6,8 +6,7 @@ def readme():
         return f.read()
 
 
-setuptools.setup(
-      name='BayesPowerlaw',
+setup(name='BayesPowerlaw',
       version='0.1b',
       description='Fitting power law distributions using Bayesian Inference',
       long_description=readme(),
@@ -22,7 +21,7 @@ setuptools.setup(
       author='Kristina Grigaityte, Gurinder Atwal',
       author_email='atwal@cshl.edu',
       license='MIT',
-      packages=setuptools.find_packages(),
+      packages=['BayesPowerlaw'],
       package_data={'BayesPowerlaw': ['BayesPowerlaw_data/*']},
       include_package_data=True,
       install_requires=[

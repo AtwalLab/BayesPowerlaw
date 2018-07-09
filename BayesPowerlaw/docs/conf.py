@@ -12,23 +12,24 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
+import os
 import sys
-sys.path.append('../')
-import BayesPowerlaw
+sys.path.insert(0, os.path.abspath('.'))
+
+# import sys
+# sys.path.append('../')
+# import BayesPowerlaw
+
 # -- Project information -----------------------------------------------------
 
 project = 'BayesPowerlaw'
-copyright = '2018, Kristina Grigaityte, Gurinder Atwal'
-author = 'Kristina Grigaityte, Gurinder Atwal'
+copyright = '2018, Kristina Grigaityte, Atwal S. Gurinder'
+author = 'Kristina Grigaityte, Atwal S. Gurinder'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.1b'
+release = '0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -40,9 +41,11 @@ release = '0.1b'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax',
-              'sphinx.ext.autodoc',
-              'numpydoc']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.mathjax',
+    'numpydoc'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -132,7 +135,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'BayesPowerlaw.tex', 'BayesPowerlaw Documentation',
-     'Kristina Grigaityte, Gurinder S. Atwal', 'manual'),
+     'Kristina Grigaityte, Atwal S. Gurinder', 'manual'),
 ]
 
 
@@ -141,7 +144,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'BayesPowerlaw', 'BayesPowerlaw Documentation',
+    (master_doc, 'bayespowerlaw', 'BayesPowerlaw Documentation',
      [author], 1)
 ]
 

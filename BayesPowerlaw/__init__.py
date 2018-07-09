@@ -1,1 +1,1 @@
-name = "BayesPowerlaw"
+from .BayesPowerlaw import *

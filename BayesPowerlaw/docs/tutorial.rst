@@ -8,9 +8,6 @@ We begin by loading numpy, matplotlib.pyplot and BayesPowerlaw::
     import matplotlib.pyplot as plt
     import BayesPowerlaw as bp
 
-    #activate interactive plotting if using jupyter notebook
-    %matplotlib inline
-
 Next we simulate a power law distribution using the power_law function::
 
     #define variables for simulation
