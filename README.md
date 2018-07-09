@@ -1,6 +1,6 @@
 BayesPowerlaw fits single or mixtures of power law distributions and estimate their exponent using Bayesian Inference, specifically Markov-Chain Monte Carlo Metropolis Hastings algorithm. See the Documentation page for details.
 
-**Installation**
+**Installation**:
   pip install BayesPowerlaw
 
 Requirements:
