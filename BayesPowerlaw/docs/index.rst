@@ -41,7 +41,6 @@ Resources
 .. toctree::
 
    tutorial
-   examples
    documentation
 
 Contact

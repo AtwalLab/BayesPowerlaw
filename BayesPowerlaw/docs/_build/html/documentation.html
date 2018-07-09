@@ -1,0 +1,957 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Documentation &#8212; BayesPowerlaw 0.1b documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BayesPowerlaw 0.1b documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Documentation</a><ul>
+<li><a class="reference internal" href="#bp-bayes">bp.bayes</a></li>
+<li><a class="reference internal" href="#bp-maxlikelihood">bp.maxLikelihood</a></li>
+<li><a class="reference internal" href="#bp-power-law">bp.power_law</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Tutorial</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/documentation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="documentation">
+<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="bp-bayes">
+<h2>bp.bayes<a class="headerlink" href="#bp-bayes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="BayesPowerlaw.bayes">
+<em class="property">class </em><code class="descclassname">BayesPowerlaw.</code><code class="descname">bayes</code><span class="sig-paren">(</span><em>data, gamma_range=[1.01, 10.0], xmin=None, xmax=None, discrete=True, niters=10000, sigma=[0.05, 0.05], sigma_burn=[1.0, 1.0], burn_in=1000, prior='jeffrey', mixed=1, fit=True</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function fits the data to powerlaw distribution and outputs the exponent
+using Bayesian inference (markov chain monte carlo metropolis-hastings algorithm). 
+If the data consists of mixture more than 1 powerlaws, if specified the function will identify the mixture of exponents 
+as well as the weights each exponent carries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: (list or np.array of numbers)</strong></p>
+<blockquote>
+<div><p>An array of data from the powerlaw that is being fitted here y=x^(-gamma)/Z.
+All values must be integers or floats from 1 to infinity.</p>
+</div></blockquote>
+<p><strong>gamma_range: ([float&gt;1,float&lt;10])</strong></p>
+<blockquote>
+<div><p>The first value in the list indicates the lowest possible exponent, which will be used to start the algorithm. 
+The second value is the largest possible exponent. The algorithm will reject any exponent values higher than that.
+Default is [1.01,6.0], since exponent of 1 and lower is mathematically invalid, and exponents above 6 are rare.</p>
+</div></blockquote>
+<p><strong>xmin: (int or float &gt;=1)</strong></p>
+<blockquote>
+<div><p>The lowest value from the data included in the powerlaw fit. 
+Default value is “None”, in which case the minimum value observed in the data is used.</p>
+</div></blockquote>
+<p><strong>xmax: (int or float &gt;= xmin)</strong></p>
+<blockquote>
+<div><p>The highest value from the data included in the powerlaw fit. 
+Default value is “None”, in which case the maximum value observed in the data is used.
+To set xmax to infinity use xmax=np.infty.</p>
+</div></blockquote>
+<p><strong>discrete: (bool)</strong></p>
+<blockquote>
+<div><p>Whether or not the powerlaw is discrete or continuous.
+Default True, in which case powerlaw is assumed to be discrete.
+The distinction is important when estimating partition function Z.</p>
+</div></blockquote>
+<p><strong>niters: (int)</strong></p>
+<blockquote>
+<div><p>Number of MCMC iterations performed. The default is 10000.</p>
+</div></blockquote>
+<p><strong>sigma: ([float&gt;0,float&gt;0])</strong></p>
+<blockquote>
+<div><p>Standard deviation of the sampling step size during MCMC for both gamma (first value) and weight (second value).
+Samples are taken from a gaussian distribution with a mean of zero.
+Default value is 0.05 for both, which is seen to perform with good efficiency.</p>
+</div></blockquote>
+<p><strong>sigma_burn: ([float&gt;0,float&gt;0])</strong></p>
+<blockquote>
+<div><p>Standard deviation of the sampling step size during MCMC burn in for both gamma (first value) and weight (second value).
+Samples are taken from a gaussian distribution with a mean of zero.
+Default value is 1.0 for both, which quickly travels to a correct value range.</p>
+</div></blockquote>
+<p><strong>burn_in (int):</strong></p>
+<blockquote>
+<div><p>Number of MCMC iterations performs during burn in. 
+The results from burn in are discarded from a final posterior distribution.
+The default is 1000.</p>
+</div></blockquote>
+<p><strong>prior: (string)</strong></p>
+<blockquote>
+<div><p>Prior type for performing Bayesian inference. Possible values:
+‘jeffrey’ : derived Jeffrey’s prior for fitting powerlaw distributions (default).
+‘flat’    : flat prior within the specified gamma range.</p>
+</div></blockquote>
+<p><strong>mixed: (int&gt;0)</strong></p>
+<blockquote>
+<div><p>Number of distinct powerlaws the dataset is thought to consist of. Default is 1.</p>
+</div></blockquote>
+<p><strong>fit: (bool)</strong></p>
+<blockquote class="last">
+<div><p>Whether or not to perform fitting while creating the object.
+Not necessary if only desired to plot a power law with now fit.
+Default True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="88%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>n:</strong></td>
+<td>Sample size of the data. (int&gt;5)</td>
+</tr>
+<tr class="row-even"><td><strong>params:</strong></td>
+<td>Number of parameters fitted (mixed*2-1), that is number of exponents (mixed) + number of weights (mixed-1), where the last weight is 1-[weights]. (int)</td>
+</tr>
+<tr class="row-odd"><td><strong>niters:</strong></td>
+<td>Number of iterations in the main MCMC algorithm. Scales with number of parameters (niters x params). (int)</td>
+</tr>
+<tr class="row-even"><td><strong>burn:</strong></td>
+<td>Number of iterations in the burn in MCMC algorithm. Scales with number of parameters (burn_in x params). (int)</td>
+</tr>
+<tr class="row-odd"><td><strong>gammas:</strong></td>
+<td>An array of 10000 gamma values within the given gamma_range for plotting prior. (1D np.array)</td>
+</tr>
+<tr class="row-even"><td><strong>weight:</strong></td>
+<td>An array of 100 weight values from 0 to 1 for plotting prior. (1D np.array)</td>
+</tr>
+<tr class="row-odd"><td><strong>sigma_g:</strong></td>
+<td>Standard deviation of the sampling step size during MCMC for gamma. (float&gt;0)</td>
+</tr>
+<tr class="row-even"><td><strong>sigma_w:</strong></td>
+<td>Standard deviation of the sampling step size during MCMC for weight. (float&gt;0)</td>
+</tr>
+<tr class="row-odd"><td><strong>sigma_burn_g:</strong></td>
+<td>Standard deviation of the sampling step size during MCMC burn in for gamma. (float&gt;0)</td>
+</tr>
+<tr class="row-even"><td><strong>sigma_burn_w:</strong></td>
+<td>Standard deviation of the sampling step size during MCMC burn in for weight. (float&gt;0)</td>
+</tr>
+<tr class="row-odd"><td><strong>prior_gamma:</strong></td>
+<td>An array of probabilities of each value in gammas for plotting prior. (1D np.array)</td>
+</tr>
+<tr class="row-even"><td><strong>prior_weight:</strong></td>
+<td>An array of probabilities of each value in weights for plotting prior. (1D np.array)</td>
+</tr>
+<tr class="row-odd"><td><strong>gamma_posterior:</strong></td>
+<td>A 2D array of accepted exponents in each iteration after burn in. Rows - each powerlaw in the mixture. Columns - accepted exponent each iteration. (2D np.array)</td>
+</tr>
+<tr class="row-even"><td><strong>weight_posterior:</strong></td>
+<td>A 2D array of accepted weights in each iteration after burn in. Rows - each powerlaw in the mixture. Columns - accepted weight each iteration. (2D np.array)</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.L">
+<code class="descname">L</code><span class="sig-paren">(</span><em>gamma_params</em>, <em>weight_params</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.L" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates the log likelihood given target exponent and weight values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target exponents for each powerlaw in the data.</p>
+</div></blockquote>
+<p><strong>weight_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target weights for each powerlaw in the data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Calculated log likelihood value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.Z">
+<code class="descname">Z</code><span class="sig-paren">(</span><em>gamma</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.Z" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partition function Z for discrete and continuous powerlaw distributions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma: (float)</strong></p>
+<blockquote>
+<div><p>Randomly sampled target exponent.</p>
+</div></blockquote>
+<p><strong>returns</strong></p>
+<p><strong>——</strong></p>
+<p><strong>s:</strong></p>
+<blockquote class="last">
+<div><p>Partition value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.Z_jeffrey">
+<code class="descname">Z_jeffrey</code><span class="sig-paren">(</span><em>gamma</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.Z_jeffrey" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates Jeffrey’s prior for a given exponent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma: (float)</strong></p>
+<blockquote>
+<div><p>Randomly sampled target exponent.</p>
+</div></blockquote>
+<p><strong>returns</strong></p>
+<p><strong>——</strong></p>
+<p class="last"><strong>Calculated Jeffrey’s prior.</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.Z_prime">
+<code class="descname">Z_prime</code><span class="sig-paren">(</span><em>gamma</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.Z_prime" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates first differential of partition function Z.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma: (float)</strong></p>
+<blockquote>
+<div><p>Randomly sampled target exponent.</p>
+</div></blockquote>
+<p><strong>returns</strong></p>
+<p><strong>——</strong></p>
+<p class="last"><strong>First differential of the Z function.</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.Z_prime2">
+<code class="descname">Z_prime2</code><span class="sig-paren">(</span><em>gamma</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.Z_prime2" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates second differential of partition function Z.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma: (float)</strong></p>
+<blockquote>
+<div><p>Randomly sampled target exponent.</p>
+</div></blockquote>
+<p><strong>returns</strong></p>
+<p><strong>——</strong></p>
+<p class="last"><strong>Second differential of the Z function.</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.bic">
+<code class="descname">bic</code><span class="sig-paren">(</span><em>samples_gamma</em>, <em>samples_weight</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.bic" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates the Beyesian Information Criteria for
+determining the number of parameters most optimal for fittin the dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples_gamma: (2D np.array)</strong></p>
+<blockquote>
+<div><p>accepted exponents in each iteration after burn in.
+Rows - each powerlaw in the mixture.
+Columns - accepted exponent each iteration.</p>
+</div></blockquote>
+<p><strong>samples_weight: (2D np.array)</strong></p>
+<blockquote>
+<div><p>accepted weights in each iteration after burn in.
+Rows - each powerlaw in the mixture.
+Columns - accepted weight each iteration.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">b:</p>
+<blockquote class="last">
+<div><p>Beyesian Information Criteria (BIC) value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.burn_in">
+<code class="descname">burn_in</code><span class="sig-paren">(</span><em>gamma_params</em>, <em>weight_params</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.burn_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function preforms the burn in part of the MCMC algorithm that will get the 
+initial values to the roughly correct range for fitting. The parameters accepted
+during burn in are not included in the final samples array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target exponents for each powerlaw in the data.</p>
+</div></blockquote>
+<p><strong>weight_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target weights for each powerlaw in the data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">gamma_params:</p>
+<blockquote>
+<div><p>1D array of accepted exponent values.</p>
+</div></blockquote>
+<p>weight_params:</p>
+<blockquote class="last">
+<div><p>1D array of accepted weight values.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.log_prior">
+<code class="descname">log_prior</code><span class="sig-paren">(</span><em>gamma</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.log_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates prior given target exponent and prior model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma: (float)</strong></p>
+<blockquote>
+<div><p>Randomly sampled target exponent.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">prior_answer:</p>
+<blockquote class="last">
+<div><p>calculated log of prior.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.monte_carlo">
+<code class="descname">monte_carlo</code><span class="sig-paren">(</span><em>gamma_params</em>, <em>weight_params</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.monte_carlo" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function preforms the full MCMC algorithm. The parameters accepted in this part
+of MCMC will be saved in the final samples array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target exponents for each powerlaw in the data.</p>
+</div></blockquote>
+<p><strong>weight_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target weights for each powerlaw in the data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">gamma_params:</p>
+<blockquote>
+<div><p>1D array of accepted exponent values.</p>
+</div></blockquote>
+<p>weight_params:</p>
+<blockquote class="last">
+<div><p>1D array of accepted weight values.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.plot_fit">
+<code class="descname">plot_fit</code><span class="sig-paren">(</span><em>gamma_mean</em>, <em>label=None</em>, <em>data_color=None</em>, <em>edge_color=None</em>, <em>fit_color=None</em>, <em>scatter_size=10</em>, <em>line_width=1</em>, <em>fit=True</em>, <em>log=True</em>, <em>xmin=None</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.plot_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function for plotting the date as a power law distribution on a log log scale
+along with the best fit.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma_mean: (float)</strong></p>
+<blockquote>
+<div><p>Final exponent used to generate the best fit curve. For best results
+use the mean of posterior samples.</p>
+</div></blockquote>
+<p><strong>label: (str)</strong></p>
+<blockquote>
+<div><p>curve label.</p>
+</div></blockquote>
+<p><strong>data color: (str)</strong></p>
+<blockquote>
+<div><p>color of the data scatter plot.</p>
+</div></blockquote>
+<p><strong>edge_color: (str)</strong></p>
+<blockquote>
+<div><p>color of the scatter marker edge.</p>
+</div></blockquote>
+<p><strong>fit_color: (str)</strong></p>
+<blockquote>
+<div><p>color of the best fit curve.</p>
+</div></blockquote>
+<p><strong>scatter_size: (int or float)</strong></p>
+<blockquote>
+<div><p>scatter marker size.</p>
+</div></blockquote>
+<p><strong>line_width: (int or float)</strong></p>
+<blockquote>
+<div><p>width of the best fit curve.</p>
+</div></blockquote>
+<p><strong>fit: (bool)</strong></p>
+<blockquote>
+<div><p>Whether to plot the best fit curve or not (default True).</p>
+</div></blockquote>
+<p><strong>log: (bool)</strong></p>
+<blockquote>
+<div><p>Whether to plot in the log scale or not (default True).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.plot_posterior">
+<code class="descname">plot_posterior</code><span class="sig-paren">(</span><em>samples</em>, <em>bins=100</em>, <em>alpha=None</em>, <em>color=None</em>, <em>label=None</em>, <em>range=None</em>, <em>normed=True</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.plot_posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function for plotting posterior histogram.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples: (1D array)</strong></p>
+<blockquote>
+<div><p>an array of accepted exponents during the MCMC algorithm.</p>
+</div></blockquote>
+<p><strong>bins: (int)</strong></p>
+<blockquote>
+<div><p>number of bins used for the histogram (default: 100).</p>
+</div></blockquote>
+<p><strong>alpha: (0&lt;=float&lt;=1)</strong></p>
+<blockquote>
+<div><p>transparency of the histogram.</p>
+</div></blockquote>
+<p><strong>color: (str)</strong></p>
+<blockquote>
+<div><p>color of the histogram.</p>
+</div></blockquote>
+<p><strong>label: (str)</strong></p>
+<blockquote>
+<div><p>label of the histogram.</p>
+</div></blockquote>
+<p><strong>range: (tuple)</strong></p>
+<blockquote>
+<div><p>range of histogram’s X axis.</p>
+</div></blockquote>
+<p><strong>normed: (bool)</strong></p>
+<blockquote>
+<div><p>whether the histogram is normalized or not (default: True)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.plot_prior">
+<code class="descname">plot_prior</code><span class="sig-paren">(</span><em>color=None</em>, <em>label=None</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.plot_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function for plotting prior for gammas.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>color: (str)</strong></p>
+<blockquote>
+<div><p>color of the curve</p>
+</div></blockquote>
+<p><strong>label: (str)</strong></p>
+<blockquote>
+<div><p>label of the curve</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.posterior">
+<code class="descname">posterior</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>A master function that executes burn in and monte carlo algorithms while
+storing the accepted parameter values into the final samples array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>None.</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">samples_gamma:</p>
+<blockquote>
+<div><p>A 2D array of accepted exponents in each iteration after burn in.
+Rows - each powerlaw in the mixture.
+Columns - accepted exponent each iteration.</p>
+</div></blockquote>
+<p>samples_weight:</p>
+<blockquote class="last">
+<div><p>A 2D array of accepted weights in each iteration after burn in.
+Rows - each powerlaw in the mixture.
+Columns - accepted weight each iteration.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.powerlawpdf">
+<code class="descname">powerlawpdf</code><span class="sig-paren">(</span><em>final_gamma</em>, <em>xmin=None</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.powerlawpdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>The power law probability function for generating the best fit curve.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>final_gamma: (float)</strong></p>
+<blockquote>
+<div><p>Final exponent used to generate the best fit curve. For best results
+use the mean of posterior samples.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">xp: (1D array)</p>
+<blockquote>
+<div><p>array of X’s arranged from xmin to xmax of the data.</p>
+</div></blockquote>
+<p>yp: (1D array)</p>
+<blockquote class="last">
+<div><p>array of probabilities for each X given the final exponent.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.random_walk">
+<code class="descname">random_walk</code><span class="sig-paren">(</span><em>gamma_params</em>, <em>weight_params</em>, <em>sigma_g</em>, <em>sigma_w</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.random_walk" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function samples new target exponent and weight values using sample_new function
+and calculates acceptance values to compare the initial parameter values to the 
+newly sampled ones.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target exponents for each powerlaw in the data.</p>
+</div></blockquote>
+<p><strong>weight_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target weights for each powerlaw in the data.</p>
+</div></blockquote>
+<p><strong>sigma_g: (float&gt;0)</strong></p>
+<blockquote>
+<div><p>Standard deviation of gamma step size during random sampling.</p>
+</div></blockquote>
+<p><strong>sigma_w: (float&gt;0)</strong></p>
+<blockquote>
+<div><p>Standard deviation of weight step size during random sampling.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a:</p>
+<blockquote>
+<div><p>acceptance value to compare which parameter values are more likely to result in
+a more accurate fit.</p>
+</div></blockquote>
+<p>gamma_params_p:</p>
+<blockquote>
+<div><p>1D array of randomly sampled exponents.</p>
+</div></blockquote>
+<p>weight_params_p:</p>
+<blockquote class="last">
+<div><p>1D array of randomly sampled weights.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.sample_new">
+<code class="descname">sample_new</code><span class="sig-paren">(</span><em>gamma_params</em>, <em>weight_params</em>, <em>sigma_g</em>, <em>sigma_w</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.sample_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs random sampling of gammas and weights given the initial
+gamma and weight values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target exponents for each powerlaw in the data.</p>
+</div></blockquote>
+<p><strong>weight_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target weights for each powerlaw in the data.</p>
+</div></blockquote>
+<p><strong>sigma_g: (float&gt;0)</strong></p>
+<blockquote>
+<div><p>Standard deviation of the sampling step size during MCMC for gamma.</p>
+</div></blockquote>
+<p><strong>sigma_w: (float&gt;0)</strong></p>
+<blockquote>
+<div><p>Standard deviation of the sampling step size during MCMC for weights.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">gamma_params_p:</p>
+<blockquote>
+<div><p>a 1D array of newly sampled exponent values.</p>
+</div></blockquote>
+<p>weight_params_p:</p>
+<blockquote class="last">
+<div><p>a 1D array of newly sampled weight values.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.target">
+<code class="descname">target</code><span class="sig-paren">(</span><em>gamma_params</em>, <em>weight_params</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.bayes.target" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates target values for comparing existing exponents and weight to
+newly samples exponents and weights. Target for given parameters is equal to
+log of (likelihood x prior).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target exponents for each powerlaw in the data.</p>
+</div></blockquote>
+<p><strong>weight_params: (1D np.array)</strong></p>
+<blockquote>
+<div><p>Array of randomly sampled target weights for each powerlaw in the data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">p:</p>
+<blockquote class="last">
+<div><p>calculated target value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="bp-maxlikelihood">
+<h2>bp.maxLikelihood<a class="headerlink" href="#bp-maxlikelihood" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="BayesPowerlaw.maxLikelihood">
+<em class="property">class </em><code class="descclassname">BayesPowerlaw.</code><code class="descname">maxLikelihood</code><span class="sig-paren">(</span><em>data, initial_guess=[1, 6, 10], xmin=None, xmax=None, discrete=True</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.maxLikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function fits the data to powerlaw distribution and outputs the exponent
+using the maximum likelihood and Newton-Raphson approach.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: (list or np.array of numbers)</strong></p>
+<blockquote>
+<div><p>An array of data from the powerlaw that is being fitted here y=x^(-gamma)/Z.
+All values must be integers or floats from 1 to infinity.</p>
+</div></blockquote>
+<p><strong>initial_guess: (list [lower range&gt;=1, upper range, number of initial guesses])</strong></p>
+<blockquote>
+<div><p>a list for generating a 1D array containing a variation of initial guesses for 
+Newton-Raphson algorithm.</p>
+</div></blockquote>
+<p><strong>min: (int or float &gt;=1)</strong></p>
+<blockquote>
+<div><p>The lowest value from the data included in the powerlaw fit. 
+Default value is “None”, in which case the minimum value observed in the data is used.</p>
+</div></blockquote>
+<p><strong>xmax: (int or float &gt;= xmin)</strong></p>
+<blockquote>
+<div><p>The highest value from the data included in the powerlaw fit. 
+Default value is “None”, in which case the maximum value observed in the data is used.
+To set xmax to infinity use xmax=np.infty.</p>
+</div></blockquote>
+<p><strong>discrete: (bool)</strong></p>
+<blockquote class="last">
+<div><p>Whether or not the powerlaw is discrete or continuous.
+Default True, in which case powerlaw is assumed to be discrete.
+The distinction is important when estimating partition function Z.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>n:</strong></td>
+<td>Sample size of the data. (int&gt;5)</td>
+</tr>
+<tr class="row-even"><td><strong>constant:</strong></td>
+<td>a constant calculated to be added to 1st order Z differential prior to preforming Newton-Raphson algorithm. (float)</td>
+</tr>
+<tr class="row-odd"><td><strong>initial_guess:</strong></td>
+<td>an array of initial guesses used in Newton-Raphson algorithm. (1D array)</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="BayesPowerlaw.maxLikelihood.F">
+<code class="descname">F</code><span class="sig-paren">(</span><em>gamma</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.maxLikelihood.F" title="Permalink to this definition">¶</a></dt>
+<dd><p>The optimization function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma: (float)</strong></p>
+<blockquote>
+<div><p>exponent guess.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">First order Z differential plus constant attribute.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.maxLikelihood.Guess">
+<code class="descname">Guess</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.maxLikelihood.Guess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Master function that performs Newton-Raphson algorithm and determins best
+exponent guess via maximum likelihood.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>None.</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">best_guess: (1D array)</p>
+<blockquote class="last">
+<div><p>an array containing best exponent guesses given the maximum likelihood.
+Length of array will be more than 1 if same likelihood value is associated
+with more than one exponent guess.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="BayesPowerlaw.maxLikelihood.Z">
+<code class="descname">Z</code><span class="sig-paren">(</span><em>gamma</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.maxLikelihood.Z" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partition function Z for discrete and continuous powerlaw distributions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gamma: (float)</strong></p>
+<blockquote>
+<div><p>exponent guess.</p>
+</div></blockquote>
+<p><strong>returns</strong></p>
+<p><strong>——</strong></p>
+<p><strong>s:</strong></p>
+<blockquote class="last">
+<div><p>Partition value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="bp-power-law">
+<h2>bp.power_law<a class="headerlink" href="#bp-power-law" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="BayesPowerlaw.power_law">
+<code class="descclassname">BayesPowerlaw.</code><code class="descname">power_law</code><span class="sig-paren">(</span><em>exponent</em>, <em>xmax</em>, <em>sample_size</em>, <em>xmin=1</em>, <em>discrete=True</em><span class="sig-paren">)</span><a class="headerlink" href="#BayesPowerlaw.power_law" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function simulates a dataset that follows a powerlaw
+distribution with a given exponent and xmax.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>exponent: (float&gt;1)</strong></p>
+<blockquote>
+<div><p>exponent of the powerlaw distribution equation (y=1/x^exponent).</p>
+</div></blockquote>
+<p><strong>xmax: (int or float &gt; xmin)</strong></p>
+<blockquote>
+<div><p>the maximum possible x value in the simulated dataset.</p>
+</div></blockquote>
+<p><strong>sample_size: (int&gt;5)</strong></p>
+<blockquote>
+<div><p>samples size of the simulated dataset.</p>
+</div></blockquote>
+<p><strong>xmin: (int or float &gt;=1)</strong></p>
+<blockquote>
+<div><p>the minimum possible x value in the simulated dataset (default: 1).</p>
+</div></blockquote>
+<p><strong>discrete: (bool)</strong></p>
+<blockquote>
+<div><p>whether the simulated powerlaw contains discrete (True) or continuous (False) values (default: True)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">1D array of X’es that has a size of sample_size parameter.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BayesPowerlaw 0.1b documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Kristina Grigaityte, Gurinder Atwal.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

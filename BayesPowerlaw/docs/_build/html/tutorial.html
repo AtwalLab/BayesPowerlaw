@@ -1,0 +1,162 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Tutorial &#8212; BayesPowerlaw 0.1b documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documentation" href="documentation.html" />
+    <link rel="prev" title="BayesPowerlaw" href="index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="documentation.html" title="Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="BayesPowerlaw"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BayesPowerlaw 0.1b documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">BayesPowerlaw</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="documentation.html"
+                        title="next chapter">Documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/tutorial.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>We begin by loading numpy, matplotlib.pyplot and BayesPowerlaw:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">BayesPowerlaw</span> <span class="k">as</span> <span class="nn">bp</span>
+
+<span class="c1">#activate interactive plotting if using jupyter notebook</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</pre></div>
+</div>
+<p>Next we simulate a power law distribution using the power_law function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define variables for simulation</span>
+<span class="n">exponent</span><span class="o">=</span><span class="mf">2.0</span>
+<span class="n">sample_size</span><span class="o">=</span><span class="mi">1000</span>
+<span class="n">xmax</span><span class="o">=</span><span class="mi">10000</span>
+<span class="c1">#simulate data following power law distribution</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">power_law</span><span class="p">(</span><span class="n">exponent</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">sample_size</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can simply plot the data by running the bayes function while specifying that we don’t want to perform the fitting:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#create a bayes-data object without fitting</span>
+<span class="n">bayes_object</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">bayes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">fit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1">#plot the distribution without the fit</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">bayes_object</span><span class="o">.</span><span class="n">plot_fit</span><span class="p">(</span><span class="mf">1.01</span><span class="p">,</span><span class="n">scatter_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">data_color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span><span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="n">fit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;frequency&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="Simulated power law." src="_images/sim_powerlaw.png" />
+<p>Let’s perform the fitting of the simulated power law and get an exponent, this will take up to 30s:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#perform the fitting</span>
+<span class="n">fit</span><span class="o">=</span><span class="n">bp</span><span class="o">.</span><span class="n">bayes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="c1">#get the posterior of exponent attribute. Since we only have a singular power law, we need only the first (index = 0) row of the 2D array.</span>
+<span class="n">posterior</span><span class="o">=</span><span class="n">fit</span><span class="o">.</span><span class="n">gamma_posterior</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1">#mean of the posterior is our estimated exponent</span>
+<span class="n">est_exponent</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">posterior</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now let’s plot the distribution with the fit:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">fit</span><span class="o">.</span><span class="n">plot_fit</span><span class="p">(</span><span class="n">est_exponent</span><span class="p">,</span><span class="n">fit_color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="n">scatter_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">data_color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span><span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="n">line_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;frequency&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="Simulated power law with fit." src="_images/sim_fit.png" />
+<p>We can also plot the posterior distribution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">fit</span><span class="o">.</span><span class="n">plot_posterior</span><span class="p">(</span><span class="n">posterior</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;posterior&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;exponent&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="Simulated power law." src="_images/sim_posterior.png" />
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="documentation.html" title="Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="BayesPowerlaw"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BayesPowerlaw 0.1b documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Kristina Grigaityte, Gurinder Atwal.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+    </div>
+  </body>
+</html>

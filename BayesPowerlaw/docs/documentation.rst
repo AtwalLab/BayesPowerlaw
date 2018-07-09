@@ -2,14 +2,14 @@
 Documentation
 =============
 
-bp.fit_bayes
+bp.bayes
 ------------
 
 .. autoclass:: BayesPowerlaw.bayes
     :members:
 
-bp.fit_ml
----------
+bp.maxLikelihood
+----------------
 
 .. autoclass:: BayesPowerlaw.maxLikelihood
     :members:

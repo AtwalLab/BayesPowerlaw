@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-data_dir = os.path.dirname(os.path.abspath(__file__)) + '/../examples/data'
+data_dir = os.path.dirname(os.path.abspath(__file__)) + '/examples/data'
 data = np.loadtxt(data_dir + '/tweet_count.txt')
 
 fit=bp.bayes(data)
