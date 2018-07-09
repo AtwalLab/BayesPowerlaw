@@ -43,7 +43,10 @@ release = '0.1'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.mathjax'
+    'sphinx.ext.autosummary',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'numpydoc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
