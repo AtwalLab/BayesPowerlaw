@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=powerlaw
+set SPHINXPROJ=BayesPowerlaw
 
 if "%1" == "" goto help
 

@@ -1,0 +1,4 @@
+include README.rst
+include LICENSE
+recursive-include BayesPowerlaw/docs *
+recursive-include BayesPowerlaw/examples *

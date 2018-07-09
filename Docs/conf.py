@@ -28,7 +28,7 @@ author = 'Kristina Grigaityte, Gurinder Atwal'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.1b'
 
 
 # -- General configuration ---------------------------------------------------
@@ -132,7 +132,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'BayesPowerlaw.tex', 'BayesPowerlaw Documentation',
-     'Kristina Grigaityte, Gurinder Atwal', 'manual'),
+     'Kristina Grigaityte, Gurinder S. Atwal', 'manual'),
 ]
 
 

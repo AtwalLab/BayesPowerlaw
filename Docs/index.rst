@@ -1,13 +1,19 @@
-========
+=============
 BayesPowerlaw
-========
+=============
 
 *Written by Kristina Grigaityte.*
 
-.. BayesPowerlaw documentation master file, created by
-   sphinx-quickstart on Mon Jun  4 19:03:57 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. image:: tweet_powerlaw.png
+   :height: 260px
+   :width: 380px
+.. image:: tweet_posterior.png
+   :height: 260px
+   :width: 380px
+
+
+BayesPowerlaw fits single or mixtures of power law distributions and estimate their exponent using Bayesian Inference,
+specifically Markov-Chain Monte Carlo Metropolis Hastings algorithm.
 
 Installation
 ------------
@@ -18,13 +24,13 @@ BayesPowerlaw can be installed from
     pip install BayesPowerlaw
 
 The code for powerlaw is open source and available on
-`GitHub <https://github.com/atwal/Fit_powerlaw>`_.
+`GitHub <https://github.com/atwal/BayesPowerlaw>`_.
 
 
 Quick Start
 -----------
 
-To make the figure shown above, do this from within Python::
+To make the figures shown above, do this from within Python::
 
    import BayesPowerlaw as bp
    bp.demo()
