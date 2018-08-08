@@ -314,6 +314,25 @@ class bayes(object):
                 (sp.stats.uniform(self.range[0], self.range[1] - self.range[0])).pdf(gamma))
         return prior_answer
 
+    def weight_prior(self, weight):
+        """
+        This function calculates prior given target weight and flat prior.
+
+        parameters
+        ----------
+        gamma: (float)
+            Randomly sampled target weight.
+
+        returns
+        -------
+        prior_answer: 
+            calculated log of prior.
+
+        """
+        prior_answer = np.log(
+            (sp.stats.uniform(0, 1)).pdf(weight))
+        return prior_answer
+
     def L(self, gamma_params, weight_params):
         """
         This function calculates the log likelihood given target exponent and weight values.
@@ -366,8 +385,12 @@ class bayes(object):
         if (np.sum(gamma_params < self.range[0]) != 0) or (np.sum(gamma_params > self.range[1]) != 0) or (np.sum(weight_params < 0) != 0):
             p = 0
         else:
-            p = self.L(gamma_params, weight_params) + \
-                self.log_prior(gamma_params[0])
+            prior=0
+            for i in range(len(gamma_params)):
+                prior = prior + \
+                    self.log_prior(gamma_params[i]) + \
+                    self.weight_prior(weight_params[i])
+            p = self.L(gamma_params, weight_params) + prior
         return p
 
     def sample_new(self, gamma_params, weight_params, sigma_g, sigma_w):
@@ -681,6 +704,7 @@ class bayes(object):
             frequency = counts / np.sum(counts)
         else:
             yx = plt.hist(self.data, bins=1000, normed=True)
+            plt.clf()
             counts_pre = (yx[0])
             unique_pre = ((yx[1])[0:-1])
             unique = unique_pre[counts_pre != 0]
@@ -924,7 +948,7 @@ class maxLikelihood(object):
 
 
 
-def power_law(exponent, xmax, sample_size, xmin=1, discrete=True):
+def power_law(exponents, weights, xmax, sample_size, xmin=1, discrete=True):
     """This function simulates a dataset that follows a powerlaw
     distribution with a given exponent and xmax.
 
@@ -932,8 +956,14 @@ def power_law(exponent, xmax, sample_size, xmin=1, discrete=True):
     parameters
     ----------
 
-    exponent: (float>1) 
-        exponent of the powerlaw distribution equation (y=1/x^exponent).
+    exponents: (array of floats>1) 
+        array of exponents of the mixed powerlaw distribution equation. Array length is equal to the simulated mixture size.
+        e.g. for single power law, array will contain only one value, mixture of 2 - two values, etc.
+
+    exponents: (array of 0<floats<=1) 
+        array of weights of the mixed powerlaw distribution equation. Array length is equal to the simulated mixture size.
+        e.g. for single power law, array will contain only one value that will be equal to 1, mixture of 2 - two values, etc.
+        The sum of array must always be equal to 1.
 
     xmax: (int or float > xmin)
         the maximum possible x value in the simulated dataset.
@@ -959,10 +989,11 @@ def power_law(exponent, xmax, sample_size, xmin=1, discrete=True):
     else:
     	x = np.linspace(xmin, xmax, xmax**2)
     #plug each value into powerlaw equation to start generating probability mass function (pmf)
-    pmf = 1 / x**exponent
-    #divide each pmf value by the sum of all the pmf values. The sum of the resulting
-    #pmf array should become 1.
-    pmf /= pmf.sum()
+    pmf=np.zeros(len(x))
+    for i in range(len(exponents)):
+        f = 1 / x**exponents[i]
+        f /= f.sum()
+        pmf = pmf + weights[i]*f
     #np.random.choice function generates a random sample of a given sample size
     #from a given 1-D array x, given the probabilities for each value.
     return np.random.choice(x, sample_size, p=pmf)
