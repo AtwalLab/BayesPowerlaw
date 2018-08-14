@@ -9,7 +9,7 @@
     <title>Tutorial &#8212; BayesPowerlaw 0.1 documentation</title>
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -88,7 +88,7 @@
 <span class="n">sample_size</span><span class="o">=</span><span class="mi">1000</span>
 <span class="n">xmax</span><span class="o">=</span><span class="mi">10000</span>
 <span class="c1">#simulate data following power law distribution</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">power_law</span><span class="p">(</span><span class="n">exponent</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">sample_size</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">power_law</span><span class="p">([</span><span class="n">exponent</span><span class="p">],[</span><span class="mf">1.0</span><span class="p">],</span><span class="n">xmax</span><span class="p">,</span><span class="n">sample_size</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>We can simply plot the data by running the bayes function while specifying that we don’t want to perform the fitting:</p>
@@ -153,7 +153,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Kristina Grigaityte, Atwal S. Gurinder.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.
     </div>
   </body>
 </html>

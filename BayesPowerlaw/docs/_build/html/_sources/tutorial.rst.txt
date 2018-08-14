@@ -15,7 +15,7 @@ Next we simulate a power law distribution using the power_law function::
     sample_size=1000
     xmax=10000
     #simulate data following power law distribution
-    data = bp.power_law(exponent,xmax,sample_size)
+    data = bp.power_law([exponent],[1.0],xmax,sample_size)
 
 
 We can simply plot the data by running the bayes function while specifying that we don't want to perform the fitting::
