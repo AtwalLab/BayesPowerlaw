@@ -960,7 +960,7 @@ def power_law(exponents, weights, xmax, sample_size, xmin=1, discrete=True):
         array of exponents of the mixed powerlaw distribution equation. Array length is equal to the simulated mixture size.
         e.g. for single power law, array will contain only one value, mixture of 2 - two values, etc.
 
-    exponents: (array of 0<floats<=1) 
+    weights: (array of 0<floats<=1) 
         array of weights of the mixed powerlaw distribution equation. Array length is equal to the simulated mixture size.
         e.g. for single power law, array will contain only one value that will be equal to 1, mixture of 2 - two values, etc.
         The sum of array must always be equal to 1.

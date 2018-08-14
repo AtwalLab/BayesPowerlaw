@@ -580,6 +580,24 @@ log of (likelihood x prior).</p>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="BayesPowerlaw.bayes.weight_prior">
+<code class="descname">weight_prior</code><span class="sig-paren">(</span><em>weight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BayesPowerlaw.html#bayes.weight_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BayesPowerlaw.bayes.weight_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates prior given target weight and flat prior.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gamma</strong> (<em>(float)</em>) – Randomly sampled target weight.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">calculated log of prior.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">prior_answer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -687,7 +705,7 @@ with more than one exponent guess.</td>
 <h2>bp.power_law<a class="headerlink" href="#bp-power-law" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="BayesPowerlaw.power_law">
-<code class="descclassname">BayesPowerlaw.</code><code class="descname">power_law</code><span class="sig-paren">(</span><em>exponent</em>, <em>xmax</em>, <em>sample_size</em>, <em>xmin=1</em>, <em>discrete=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BayesPowerlaw.html#power_law"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BayesPowerlaw.power_law" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">BayesPowerlaw.</code><code class="descname">power_law</code><span class="sig-paren">(</span><em>exponents</em>, <em>weights</em>, <em>xmax</em>, <em>sample_size</em>, <em>xmin=1</em>, <em>discrete=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/BayesPowerlaw.html#power_law"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#BayesPowerlaw.power_law" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function simulates a dataset that follows a powerlaw
 distribution with a given exponent and xmax.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -695,7 +713,11 @@ distribution with a given exponent and xmax.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>exponent</strong> (<em>(float&gt;1)</em>) – exponent of the powerlaw distribution equation (y=1/x^exponent).</li>
+<li><strong>exponents</strong> (<em>(array of floats&gt;1)</em>) – array of exponents of the mixed powerlaw distribution equation. Array length is equal to the simulated mixture size.
+e.g. for single power law, array will contain only one value, mixture of 2 - two values, etc.</li>
+<li><strong>exponents</strong> (<em>(array of 0&lt;floats&lt;=1)</em>) – array of weights of the mixed powerlaw distribution equation. Array length is equal to the simulated mixture size.
+e.g. for single power law, array will contain only one value that will be equal to 1, mixture of 2 - two values, etc.
+The sum of array must always be equal to 1.</li>
 <li><strong>xmax</strong> (<em>(int or float &gt; xmin)</em>) – the maximum possible x value in the simulated dataset.</li>
 <li><strong>sample_size</strong> (<em>(int&gt;5)</em>) – samples size of the simulated dataset.</li>
 <li><strong>xmin</strong> (<em>(int or float &gt;=1)</em>) – the minimum possible x value in the simulated dataset (default: 1).</li>
