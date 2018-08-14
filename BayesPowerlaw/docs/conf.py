@@ -16,6 +16,12 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
 
+import mock
+ 
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
+
 # import sys
 # sys.path.append('../')
 # import BayesPowerlaw
@@ -46,8 +52,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.numpydoc'
+    'sphinx.ext.napoleon'
 ]
 
 napoleon_google_docstring = False
