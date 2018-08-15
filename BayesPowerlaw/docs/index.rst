@@ -24,7 +24,7 @@ BayesPowerlaw can be installed from
     pip install BayesPowerlaw
 
 The code for powerlaw is open source and available on
-`GitHub <https://github.com/atwal/BayesPowerlaw>`_.
+`GitHub <https://github.com/AtwalLab/BayesPowerlaw>`_.
 
 
 Quick Start
