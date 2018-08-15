@@ -33,9 +33,9 @@ copyright = '2018, Kristina Grigaityte, Atwal S. Gurinder'
 author = 'Kristina Grigaityte, Atwal S. Gurinder'
 
 # The short X.Y version
-version = ''
+version = '0.4'
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '0.4b'
 
 
 # -- General configuration ---------------------------------------------------
