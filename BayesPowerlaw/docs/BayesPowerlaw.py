@@ -4,6 +4,7 @@ import scipy as sp
 import numpy as np
 from scipy.stats import uniform
 import matplotlib.pyplot as plt
+import warnings
 
 
 class bayes(object):
@@ -136,7 +137,7 @@ class bayes(object):
 
     def __init__(self,
                  data,
-                 gamma_range=[1.01, 10.0],
+                 gamma_range=[1.01, 7.99],
                  xmin=None,
                  xmax=None,
                  discrete=True,
@@ -149,19 +150,26 @@ class bayes(object):
                  fit=True):
 
         #convert data to numpy array in case input is a list.
-        self.data = np.array(data)
+        self.data = np.array(list(data))
+        assert len(self.data)>0, "your data input is empty"
+        assert type(self.data[0])!=np.str_, "data input must only contain positive integers or floats, not strings"
+        assert np.sum(self.data<=0)==0, "data input values must be larger than 0"
 
         #xmin
         if xmin is None:
             self.xmin = min(self.data)
         else:
             self.xmin = xmin
+            assert type(self.xmin)==int or type(self.xmin)==float,"xmin must be a number or a float"
+            assert self.xmin>0, "xmin must be positive"
 
         #xmax
         if xmax is None:
             self.xmax = max(self.data) + 10.0
         else:
             self.xmax = xmax
+            assert type(self.xmax)==int or type(self.xmax)==float,"xmax must be a number or a float"
+            assert self.xmax>self.xmin, "xmax must be larger than xmin"
 
         #filter data given xmin and xmax
         if self.xmin > 1 or self.xmax != np.infty:
@@ -170,12 +178,19 @@ class bayes(object):
 
         self.n = len(self.data)  # length of data array
         # number of powerlaws in data arranged in the array from 1 to mixed
+        assert type(mixed)==int and mixed>=1,"mixed parameter must be a positive integer"
         self.mixed = np.arange(mixed)
         # total number of parameters fitted (number of exponents + number of weights where the last weight is equal to 1-[weights])
         self.params = mixed * 2 - 1
         self.range = gamma_range  # exponent range
+        assert len(list(self.range))==2, "gamma range input must contain two values"
+        assert self.range[0]>1, "lower bound of exponent range must be larger than 1"
+        if self.range[1]>=8:
+            warnings.warn('ATTENTION, avoid using the upper bound of exponent range of 8 and more. Will cause Runtime Warning', Warning)
         self.discrete = discrete  # is data discrete or continuous
+        assert type(self.discrete)==bool, "discrete must be boolean type. Choose false if data is continuous"
         self.prior_model = prior  # prior used (jeffrey's (default) or flat)
+        assert self.prior_model=="jeffrey" or self.prior_model=="flat", "prior must be equal to either 'jeffrey' or 'flat'"
         # number of iterations in MCMC scaled given number of parameters
         self.niters = niters * self.params
         # standard deviation of gamma step size in MCMC
@@ -287,8 +302,9 @@ class bayes(object):
         Calculated Jeffrey's prior.
 
         """
+        jeffrey=np.sqrt((self.Z_prime2(gamma)) / self.Z(gamma) - self.Z_prime(gamma)**2 / self.Z(gamma)**2)
 
-        return np.sqrt((self.Z_prime2(gamma)) / self.Z(gamma) - self.Z_prime(gamma)**2 / self.Z(gamma)**2)
+        return jeffrey
 
     def log_prior(self, gamma):
         """

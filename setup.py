@@ -7,13 +7,13 @@ def readme():
 
 
 setup(name='BayesPowerlaw',
-      version='0.5b',
+      version='0.6b',
       description='Fitting power law distributions using Bayesian Inference',
       long_description=readme(),
       classifiers=[
           'Development Status :: 4 - Beta',
           'License :: OSI Approved :: MIT License',
-          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
           'Topic :: Scientific/Engineering :: Mathematics',
       ],
       keywords='power law, bayesian inference',
