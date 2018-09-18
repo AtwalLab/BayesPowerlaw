@@ -154,6 +154,9 @@ class bayes(object):
         assert len(self.data)>0, "your data input is empty"
         assert type(self.data[0])!=np.str_, "data input must only contain positive integers or floats, not strings"
         assert np.sum(self.data<=0)==0, "data input values must be larger than 0"
+        if len(np.unique(self.data))==len(self.data) and discrete==True:
+            warnings.warn('ATTENTION, it appears you are fitting continuous data with discrete option. Consider using "discrete=False"', Warning)
+
 
         #xmin
         if xmin is None:
@@ -853,17 +856,27 @@ class maxLikelihood(object):
                  discrete=True):
 
         self.data = np.array(data)
+        assert len(self.data)>0, "your data input is empty"
+        assert type(self.data[0])!=np.str_, "data input must only contain positive integers or floats, not strings"
+        assert np.sum(self.data<=0)==0, "data input values must be larger than 0"
+        if len(np.unique(self.data))==len(self.data) and discrete==True:
+            warnings.warn('ATTENTION, it appears you are fitting continuous data with discrete option. Consider using "discrete=False"', Warning)
+
 
         #xmin
         if xmin is None:
             self.xmin = min(self.data)
         else:
             self.xmin = xmin
+            assert type(self.xmax)==int or type(self.xmax)==float,"xmax must be a number or a float"
+            assert self.xmax>self.xmin, "xmax must be larger than xmin"
 
         if xmax is None:
             self.xmax = max(self.data) + 10.0
         else:
             self.xmax = xmax
+            assert type(self.xmax)==int or type(self.xmax)==float,"xmax must be a number or a float"
+            assert self.xmax>self.xmin, "xmax must be larger than xmin"
 
         if self.xmin > 1 or self.xmax != np.infty:
             self.data = self.data[(self.data >= self.xmin)
@@ -871,6 +884,7 @@ class maxLikelihood(object):
         self.n = len(self.data)
         self.constant = np.sum(np.log(self.data)) / self.n
         self.discrete = discrete
+        assert type(self.discrete)==bool, "discrete must be boolean type. Choose false if data is continuous"
         self.initial_guess = np.linspace(
             initial_guess[0], initial_guess[1], initial_guess[2])
 
