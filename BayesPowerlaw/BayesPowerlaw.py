@@ -668,7 +668,7 @@ class bayes(object):
 
     def plot_fit(self,
                  gamma_mean,
-                 label=None,
+                 data_label=None,
                  data_color=None,
                  edge_color=None,
                  fit_color=None,
@@ -688,7 +688,7 @@ class bayes(object):
             Final exponent used to generate the best fit curve. For best results
             use the mean of posterior samples.
 
-        label: (str)
+        data_label: (str)
             curve label.
 
         data color: (str)
@@ -729,16 +729,17 @@ class bayes(object):
             unique = unique_pre[counts_pre != 0]
             frequency = counts_pre[counts_pre != 0]
             # frequency = counts / np.sum(counts)
-
         X, Y = self.powerlawpdf(gamma_mean, xmin)
         if log:
             plt.xscale('log')
             plt.yscale('log')
         plt.scatter(unique, frequency, s=scatter_size,
-                    color=data_color, edgecolor=edge_color)
+                    color=data_color, edgecolor=edge_color,label=data_label)
         if fit:
-            plt.plot(X, Y, color=fit_color, linewidth=line_width, label=label)
-
+            if data_label != None:
+                plt.plot(X, Y, color=fit_color, linewidth=line_width, label=data_label+' fit')
+            else:
+                plt.plot(X, Y, color=fit_color, linewidth=line_width)
         return
 
     def plot_prior(self, color=None, label=None):

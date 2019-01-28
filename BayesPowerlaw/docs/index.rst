@@ -12,8 +12,10 @@ BayesPowerlaw
    :width: 380px
 
 
-BayesPowerlaw fits single or mixtures of power law distributions and estimate their exponent using Bayesian Inference,
-specifically Markov-Chain Monte Carlo Metropolis Hastings algorithm.
+BayesPowerlaw is a Python package that fits a single or a mixture of power law distributions to data using a Bayesian inference approach. Posterior distributions of parameters are numerically determined by Markov chain Monte Carlo sampling. In addition, the package provides capability for 
+- power law simulations
+- data plotting
+- maximum likelihood estimation
 
 Installation
 ------------
@@ -23,14 +25,14 @@ BayesPowerlaw can be installed from
 
     pip install BayesPowerlaw
 
-The code for powerlaw is open source and available on
+The code for BayesPowerlaw is open source and available on
 `GitHub <https://github.com/AtwalLab/BayesPowerlaw>`_.
 
 
 Quick Start
 -----------
 
-To make the figures shown above, do this from within Python::
+To make the figures shown above, type this from within Python::
 
    import BayesPowerlaw as bp
    bp.demo()
@@ -50,7 +52,7 @@ For technical assistance or to report bugs, please
 contact `Kristina Grigaityte <kgrigait@cshl.edu>`_.
 
 For general correspondence, please 
-contact `Gurinder Atwal <atwal@cshl.edu>`_.
+contact `Gurinder (Mickey) Atwal <atwal@cshl.edu>`_.
 
 
 Indices and tables

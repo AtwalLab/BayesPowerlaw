@@ -33,7 +33,7 @@ We can simply plot the data by running the bayes function while specifying that 
 .. image:: sim_powerlaw.png
    :alt: Simulated power law.
 
-Let's perform the fitting of the simulated power law and get an exponent, this will take up to 30s::
+Let's perform the fitting of the simulated power law and get an exponent. This can take up to 30s, depending on your hardware specs::
 
     #perform the fitting
     fit=bp.bayes(data)
@@ -56,8 +56,8 @@ We can also plot the posterior distribution::
 
     plt.figure()
     fit.plot_posterior(posterior,color='blue')
-    plt.xlabel('posterior', fontsize=16)
-    plt.ylabel('exponent',fontsize=16)
+    plt.xlabel('exponent', fontsize=16)
+    plt.ylabel('posterior',fontsize=16)
 
 .. image:: sim_posterior.png
    :alt: Simulated power law.
@@ -85,7 +85,7 @@ Let's plot the simulated mixed power law using bayes function::
 .. image:: mixed_powerlaw.png
    :alt: Simulated mixed power law.
 
-To fit a mixture of power law, specify how many power laws are in the mixture. This will take some time::
+To fit a mixture of power law, specify how many power laws are in the mixture. This may take some time::
 
     #perform the fitting
     fit=bp.bayes(data,mixed=2)
@@ -101,19 +101,19 @@ To fit a mixture of power law, specify how many power laws are in the mixture. T
     est_weight1=np.mean(weight1)
     est_weight2=np.mean(weight2)
 
-Let's plot exponent and weight posteriors::
+Let's plot the posterior distributions of the exponent and weight ::
 
     plt.figure()
     fit.plot_posterior(posterior1,color='blue')
     fit.plot_posterior(posterior2,color='red')
-    plt.xlabel('posterior', fontsize=16)
-    plt.ylabel('exponent',fontsize=16)
+    plt.xlabel('exponent', fontsize=16)
+    plt.ylabel('posterior',fontsize=16)
 
     plt.figure()
     fit.plot_posterior(weight1,color='blue')
     fit.plot_posterior(weight2,color='red')
     plt.xlabel('weight', fontsize=16)
-    plt.ylabel('exponent',fontsize=16)
+    plt.ylabel('posterior',fontsize=16)
     plt.xlim([0,1])
 
 Note, correct answers for exponent are 1.1 and 2.5. Correct answers for weights are 0.3 and 0.7 respectively.
