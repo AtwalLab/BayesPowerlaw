@@ -12,10 +12,8 @@ BayesPowerlaw
    :width: 380px
 
 
-BayesPowerlaw is a Python package that fits a single or a mixture of power law distributions to data using a Bayesian inference approach. Posterior distributions of parameters are numerically determined by Markov chain Monte Carlo sampling. In addition, the package provides capability for 
-- power law simulations
-- data plotting
-- maximum likelihood estimation
+BayesPowerlaw is a Python package that fits a single or a mixture of power law distributions to data using a Bayesian inference approach. Posterior distributions of parameters are numerically determined 
+by Markov chain Monte Carlo sampling. In addition, the package provides capability for power law simulations, maximum likelihood estimation, and data plotting.
 
 Installation
 ------------
