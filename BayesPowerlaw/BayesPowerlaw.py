@@ -606,10 +606,10 @@ class bayes(object):
             samples_weight[:, i] = weight_params
         return samples_gamma, samples_weight
 
-    def bic(self, samples_gamma, samples_weight):
+    def bic(self):
         """
-        This function calculates the Beyesian Information Criteria for
-        determining the number of parameters most optimal for fittin the dataset.
+        This function calculates the Bayesian Information Criteria for
+        determining the number of parameters most optimal for fitting the dataset.
 
         parameters
         ----------
@@ -628,13 +628,12 @@ class bayes(object):
         -------
 
         b:
-            Beyesian Information Criteria (BIC) value.
+            Bayesian Information Criteria (BIC) value.
 
         """
-        gamma_params = np.mean(samples_gamma, axis=1)
-        weight_params = np.mean(samples_weight, axis=1)
-        b = np.log(self.n) * (len(self.mixed) * 2 - 1) - \
-            2 * (self.L(gamma_params, weight_params))
+        gamma_params = sp.stats.mode(self.gamma_posterior, axis=1)[0]
+        weight_params = sp.stats.mode(self.weight_posterior, axis=1)[0]
+        b = np.log(self.n) * (len(self.mixed) * 2 - 1) - 2 * (self.L(gamma_params, weight_params))
         return b
 
     def powerlawpdf(self, final_gamma, xmin=None):
@@ -736,10 +735,7 @@ class bayes(object):
         plt.scatter(unique, frequency, s=scatter_size,
                     color=data_color, edgecolor=edge_color,label=data_label)
         if fit:
-            if data_label != None:
-                plt.plot(X, Y, color=fit_color, linewidth=line_width, label=data_label+' fit')
-            else:
-                plt.plot(X, Y, color=fit_color, linewidth=line_width)
+            plt.plot(X, Y, color=fit_color, linewidth=line_width)
         return
 
     def plot_prior(self, color=None, label=None):

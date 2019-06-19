@@ -20,7 +20,7 @@ plt.show()
 
 plt.figure(figsize=(6, 4))
 fit.plot_posterior(fit.gamma_posterior[0], range=[1.6, 1.9], color='blue')
-plt.xlabel('frequency', fontsize=16)
+plt.xlabel('exponent', fontsize=16)
 plt.ylabel('posterior', fontsize=16)
 plt.title('Posterior for Likes per Tweet', fontsize=18)
 plt.tight_layout()
