@@ -7,7 +7,7 @@ def readme():
 
 
 setup(name='BayesPowerlaw',
-      version='0.8b',
+      version='1.0',
       description='Fitting power law distributions using Bayesian Inference',
       long_description=readme(),
       classifiers=[

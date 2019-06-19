@@ -154,6 +154,9 @@ class bayes(object):
         assert len(self.data)>0, "your data input is empty"
         assert type(self.data[0])!=np.str_, "data input must only contain positive integers or floats, not strings"
         assert np.sum(self.data<=0)==0, "data input values must be larger than 0"
+        if len(np.unique(self.data))==len(self.data) and discrete==True:
+            warnings.warn('ATTENTION, it appears you are fitting continuous data with discrete option. Consider using "discrete=False"', Warning)
+
 
         #xmin
         if xmin is None:
@@ -603,10 +606,10 @@ class bayes(object):
             samples_weight[:, i] = weight_params
         return samples_gamma, samples_weight
 
-    def bic(self, samples_gamma, samples_weight):
+    def bic(self):
         """
-        This function calculates the Beyesian Information Criteria for
-        determining the number of parameters most optimal for fittin the dataset.
+        This function calculates the Bayesian Information Criteria for
+        determining the number of parameters most optimal for fitting the dataset.
 
         parameters
         ----------
@@ -625,13 +628,12 @@ class bayes(object):
         -------
 
         b:
-            Beyesian Information Criteria (BIC) value.
+            Bayesian Information Criteria (BIC) value.
 
         """
-        gamma_params = np.mean(samples_gamma, axis=1)
-        weight_params = np.mean(samples_weight, axis=1)
-        b = np.log(self.n) * (len(self.mixed) * 2 - 1) - \
-            2 * (self.L(gamma_params, weight_params))
+        gamma_params = sp.stats.mode(self.gamma_posterior, axis=1)[0]
+        weight_params = sp.stats.mode(self.weight_posterior, axis=1)[0]
+        b = np.log(self.n) * (len(self.mixed) * 2 - 1) - 2 * (self.L(gamma_params, weight_params))
         return b
 
     def powerlawpdf(self, final_gamma, xmin=None):
@@ -665,7 +667,7 @@ class bayes(object):
 
     def plot_fit(self,
                  gamma_mean,
-                 label=None,
+                 data_label=None,
                  data_color=None,
                  edge_color=None,
                  fit_color=None,
@@ -685,7 +687,7 @@ class bayes(object):
             Final exponent used to generate the best fit curve. For best results
             use the mean of posterior samples.
 
-        label: (str)
+        data_label: (str)
             curve label.
 
         data color: (str)
@@ -726,16 +728,14 @@ class bayes(object):
             unique = unique_pre[counts_pre != 0]
             frequency = counts_pre[counts_pre != 0]
             # frequency = counts / np.sum(counts)
-
         X, Y = self.powerlawpdf(gamma_mean, xmin)
         if log:
             plt.xscale('log')
             plt.yscale('log')
         plt.scatter(unique, frequency, s=scatter_size,
-                    color=data_color, edgecolor=edge_color)
+                    color=data_color, edgecolor=edge_color,label=data_label)
         if fit:
-            plt.plot(X, Y, color=fit_color, linewidth=line_width, label=label)
-
+            plt.plot(X, Y, color=fit_color, linewidth=line_width)
         return
 
     def plot_prior(self, color=None, label=None):
@@ -853,17 +853,27 @@ class maxLikelihood(object):
                  discrete=True):
 
         self.data = np.array(data)
+        assert len(self.data)>0, "your data input is empty"
+        assert type(self.data[0])!=np.str_, "data input must only contain positive integers or floats, not strings"
+        assert np.sum(self.data<=0)==0, "data input values must be larger than 0"
+        if len(np.unique(self.data))==len(self.data) and discrete==True:
+            warnings.warn('ATTENTION, it appears you are fitting continuous data with discrete option. Consider using "discrete=False"', Warning)
+
 
         #xmin
         if xmin is None:
             self.xmin = min(self.data)
         else:
             self.xmin = xmin
+            assert type(self.xmax)==int or type(self.xmax)==float,"xmax must be a number or a float"
+            assert self.xmax>self.xmin, "xmax must be larger than xmin"
 
         if xmax is None:
             self.xmax = max(self.data) + 10.0
         else:
             self.xmax = xmax
+            assert type(self.xmax)==int or type(self.xmax)==float,"xmax must be a number or a float"
+            assert self.xmax>self.xmin, "xmax must be larger than xmin"
 
         if self.xmin > 1 or self.xmax != np.infty:
             self.data = self.data[(self.data >= self.xmin)
@@ -871,6 +881,7 @@ class maxLikelihood(object):
         self.n = len(self.data)
         self.constant = np.sum(np.log(self.data)) / self.n
         self.discrete = discrete
+        assert type(self.discrete)==bool, "discrete must be boolean type. Choose false if data is continuous"
         self.initial_guess = np.linspace(
             initial_guess[0], initial_guess[1], initial_guess[2])
 
