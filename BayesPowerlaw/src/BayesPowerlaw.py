@@ -6,6 +6,7 @@ from scipy.stats import uniform
 import matplotlib.pyplot as plt
 import warnings
 
+from BayesPowerlaw.src.error_handling import check, handle_errors
 
 class bayes(object):
     """This function fits the data to powerlaw distribution and outputs the exponent
@@ -19,7 +20,7 @@ class bayes(object):
         An array of data from the powerlaw that is being fitted here y=x^(-gamma)/Z.
         All values must be integers or floats from 1 to infinity.
 
-    gamma_range: ([float>1,float<10])
+    gamma_range: ([int or float>1,int or float])
         The first value in the list indicates the lowest possible exponent, which will be used to start the algorithm. 
         The second value is the largest possible exponent. The algorithm will reject any exponent values higher than that.
         Default is [1.01,6.0], since exponent of 1 and lower is mathematically invalid, and exponents above 6 are rare.
@@ -135,6 +136,7 @@ class bayes(object):
         (2D np.array)
     """
 
+    @handle_errors
     def __init__(self,
                  data,
                  gamma_range=[1.01, 7.99],
@@ -151,28 +153,32 @@ class bayes(object):
 
         #convert data to numpy array in case input is a list.
         self.data = np.array(list(data))
-        assert len(self.data)>0, "your data input is empty"
-        assert type(self.data[0])!=np.str_, "data input must only contain positive integers or floats, not strings"
-        assert np.sum(self.data<=0)==0, "data input values must be larger than 0"
-        if len(np.unique(self.data))==len(self.data) and discrete==True:
-            warnings.warn('ATTENTION, it appears you are fitting continuous data with discrete option. Consider using "discrete=False"', Warning)
+        self.range = gamma_range  # exponent range
+        self.discrete = discrete  # is data discrete or continuous
+        self.niters=niters
+        self.sigma=sigma
+        self.sigma_burn=sigma_burn
+        self.burn=burn_in
+        self.prior=prior
+        self.mixed=mixed
+        self.fit=fit
 
+        self._input_checks()
 
         #xmin
         if xmin is None:
-            self.xmin = min(self.data)
+            self.xmin = min(self.data).astype(float)
         else:
             self.xmin = xmin
-            assert type(self.xmin)==int or type(self.xmin)==float,"xmin must be a number or a float"
-            assert self.xmin>0, "xmin must be positive"
 
         #xmax
         if xmax is None:
-            self.xmax = max(self.data) + 10.0
+            self.xmax = (max(self.data)+10).astype(float)
         else:
-            self.xmax = xmax
-            assert type(self.xmax)==int or type(self.xmax)==float,"xmax must be a number or a float"
-            assert self.xmax>self.xmin, "xmax must be larger than xmin"
+            self.xmax=xmax
+
+        self._xminmax_check()
+
 
         #filter data given xmin and xmax
         if self.xmin > 1 or self.xmax != np.infty:
@@ -181,31 +187,24 @@ class bayes(object):
 
         self.n = len(self.data)  # length of data array
         # number of powerlaws in data arranged in the array from 1 to mixed
-        assert type(mixed)==int and mixed>=1,"mixed parameter must be a positive integer"
-        self.mixed = np.arange(mixed)
+        self.mixed = np.arange(self.mixed)
         # total number of parameters fitted (number of exponents + number of weights where the last weight is equal to 1-[weights])
-        self.params = mixed * 2 - 1
-        self.range = gamma_range  # exponent range
-        assert len(list(self.range))==2, "gamma range input must contain two values"
-        assert self.range[0]>1, "lower bound of exponent range must be larger than 1"
+        self.params = len(self.mixed) * 2 - 1
         if self.range[1]>=8:
             warnings.warn('ATTENTION, avoid using the upper bound of exponent range of 8 and more. Will cause Runtime Warning', Warning)
-        self.discrete = discrete  # is data discrete or continuous
-        assert type(self.discrete)==bool, "discrete must be boolean type. Choose false if data is continuous"
-        self.prior_model = prior  # prior used (jeffrey's (default) or flat)
-        assert self.prior_model=="jeffrey" or self.prior_model=="flat", "prior must be equal to either 'jeffrey' or 'flat'"
+        self.prior_model = self.prior  # prior used (jeffrey's (default) or flat)
         # number of iterations in MCMC scaled given number of parameters
-        self.niters = niters * self.params
+        self.niters = self.niters * self.params
         # standard deviation of gamma step size in MCMC
-        self.sigma_g = sigma[0]
+        self.sigma_g = self.sigma[0]
         # standard deviation of weight step size in MCMC
-        self.sigma_w = sigma[1]
+        self.sigma_w = self.sigma[1]
         # standard deviation of gamma step size in burn in
-        self.sigma_burn_g = sigma_burn[0]
+        self.sigma_burn_g = self.sigma_burn[0]
         # standard deviation of weight step size in burn in
-        self.sigma_burn_w = sigma_burn[1]
+        self.sigma_burn_w = self.sigma_burn[1]
         # number of iterations in MCMC burn in scaled given number of parameters
-        self.burn = burn_in * self.params
+        self.burn = self.burn * self.params
 
         # make array of possible gammas, given the gamma_range, and an array of possible weights.
         self.gammas = np.linspace(1.01, self.range[1], 10000)
@@ -222,9 +221,130 @@ class bayes(object):
         #make array of prior function for weights (flat prior).
         self.prior_weight = (sp.stats.uniform(0, 1)).pdf(self.weight)
 
-        if fit:
+        if self.fit:
             self.gamma_posterior, self.weight_posterior = self.posterior()
 
+
+    def _input_checks(self):
+        """
+        Validate parameters passed to the bayes constructor.
+        """
+
+        check(len(self.data) > 0,
+                'data input length = %s, must be > 0' % len(self.data))
+
+        check(self.data.dtype=='int64' or self.data.dtype=='float64',
+                'Your data contains non-numbers, data input must only contain positive integers or floats')
+
+        check(np.sum(self.data<=0)==0,
+                "your data input contains non-positive values, all values must be positive")
+
+        check(isinstance(self.mixed,int) and type(self.mixed)!=bool,
+                'mixed input must be int')
+   
+        check(self.mixed>=1,
+                'mixed input = %s, must be >=1' % self.mixed)
+
+        check(len(self.range)==2,
+                'gamma_range input length = %s, must be of length 2' % len(self.range))
+
+        check(isinstance(self.range[0],(int,float)),
+                'gamma_range input must contain floats or ints')
+        
+        check(isinstance(self.range[1],(int,float)),
+                'gamma_range input must contain floats or ints')
+
+        check(self.range[0]>1,
+                'gamma_range[0] = %s,lower bound of gamma range must be > 1' %self.range[0])
+
+        check(self.range[0]<self.range[1],
+                'lower bound of gamma range must be smaller than the upper bound') 
+
+        check(isinstance(self.discrete,bool),
+                'discrete input must be bool. Default is True. Choose False if data is continuous') 
+        
+        check(self.prior=="jeffrey" or self.prior=="flat",
+                'unrecognized prior. Default is "jeffrey". Choose "flat" if perfered')
+
+        check(isinstance(self.niters,int),
+                'niters input must be int')
+        
+        check(self.niters>=100,
+                'niters = %s, must be more than or equal to 100 for best performance')
+
+        check(isinstance(self.burn,int),
+                'burn_in input must be int')
+
+        check(self.burn>=100,
+                'burn_in = %s, must be more than or equal to 100 for best performance')
+        
+        check(isinstance(self.sigma,list),
+                'sigma input must be a list of length 2')
+
+        check(len(self.sigma)==2,
+                'sigma input length = %s, must be of length 2' % len(self.sigma))
+
+        check(type(self.sigma[0])!=bool and type(self.sigma[1])!=bool,
+                'sigma input is bool, must be int or float')
+
+        check(isinstance(self.sigma[0],(int,float)),
+                'sigma input must contain ints or floats')
+        
+        check(isinstance(self.sigma[1],(int,float)),
+                'sigma input must contain ints or floats') 
+
+        check(self.sigma[0]>0,
+                'sigma input = %s, must be > 0' % self.sigma)
+
+        check(self.sigma[1]>0,
+                'sigma input = %s, must be > 0' % self.sigma)
+
+        check(isinstance(self.sigma_burn,list),
+                'sigma_burn input must be a list of length 2')
+
+        check(len(self.sigma_burn)==2,
+                'sigma_burn input length = %s, must be of length 2' % len(self.sigma_burn))
+
+        check(type(self.sigma_burn[0])!=bool and type(self.sigma_burn[1])!=bool,
+                'sigma_burn input is bool, must be int or float')
+
+        check(isinstance(self.sigma_burn[0],(int,float)),
+                'sigma_burn input must contain floats')
+        
+        check(isinstance(self.sigma_burn[1],(int,float)),
+                'sigma_burn input must contain floats') 
+
+        check(self.sigma_burn[0]>0,
+                'sigma_burn input = %s, must be > 0' % self.sigma_burn)
+
+        check(self.sigma_burn[1]>0,
+                'sigma_burn input = %s, must be > 0' % self.sigma_burn)
+
+        check(isinstance(self.fit,bool),
+                'fit input must be bool. Default is True. Choose False if do not want to fit') 
+
+    def _xminmax_check(self):
+
+        check(isinstance(self.xmin,(int,float)),
+                'Xmin must be int or float')
+
+        check(type(self.xmin)!=bool,
+                'Xmin is bool, must be int or float')
+
+        check(self.xmin>0, 
+                'Xmin input = %s, must be > 0' % self.xmin)
+        
+        check(isinstance(self.xmax,(int,float)),
+                'Xmax must be int or float')
+        
+        check(type(self.xmax)!=bool,
+                'Xmaxn is bool, must be int or float')
+
+        check(self.xmax>self.xmin,
+                'xmin is larger than xmax, must be xmin<xmax'
+                )
+
+    @handle_errors
     def Z(self, gamma):
         """
         Partition function Z for discrete and continuous powerlaw distributions.
@@ -255,6 +375,7 @@ class bayes(object):
                 (self.xmin**(-gamma + 1) / (1 - gamma))
         return s
 
+    @handle_errors
     def Z_prime(self, gamma):
         """
         This function calculates first differential of partition function Z.
@@ -273,6 +394,7 @@ class bayes(object):
         h = 1e-8
         return (self.Z(gamma + h) - self.Z(gamma - h)) / (2 * h)
 
+    @handle_errors
     def Z_prime2(self, gamma):
         """
         This function calculates second differential of partition function Z.
@@ -291,6 +413,7 @@ class bayes(object):
         h = 1e-4
         return (self.Z(gamma + h) - 2 * self.Z(gamma) + self.Z(gamma - h)) / (h**2)
 
+    @handle_errors
     def Z_jeffrey(self, gamma):
         """
         This function calculates Jeffrey's prior for a given exponent.
@@ -309,6 +432,7 @@ class bayes(object):
 
         return jeffrey
 
+    @handle_errors
     def log_prior(self, gamma):
         """
         This function calculates prior given target exponent and prior model.
@@ -333,6 +457,7 @@ class bayes(object):
                 (sp.stats.uniform(self.range[0], self.range[1] - self.range[0])).pdf(gamma))
         return prior_answer
 
+    @handle_errors
     def weight_prior(self, weight):
         """
         This function calculates prior given target weight and flat prior.
@@ -352,6 +477,7 @@ class bayes(object):
             (sp.stats.uniform(0, 1)).pdf(weight))
         return prior_answer
 
+    @handle_errors
     def L(self, gamma_params, weight_params):
         """
         This function calculates the log likelihood given target exponent and weight values.
@@ -378,6 +504,7 @@ class bayes(object):
             lik = lik + l
         return np.sum(np.log(lik))
 
+    @handle_errors
     def target(self, gamma_params, weight_params):
         """
         This function calculates target values for comparing existing exponents and weight to
@@ -412,6 +539,7 @@ class bayes(object):
             p = self.L(gamma_params, weight_params) + prior
         return p
 
+    @handle_errors
     def sample_new(self, gamma_params, weight_params, sigma_g, sigma_w):
         """
         This function performs random sampling of gammas and weights given the initial
@@ -455,6 +583,7 @@ class bayes(object):
         weight_params_p[-1] = 1 - np.sum(weight_params_p[0:-1])
         return gamma_params_p, weight_params_p
 
+    @handle_errors
     def random_walk(self, gamma_params, weight_params, sigma_g, sigma_w):
         """
         This function samples new target exponent and weight values using sample_new function
@@ -499,6 +628,7 @@ class bayes(object):
             a = min(0, target_p - target)
         return a, gamma_params_p, weight_params_p
 
+    @handle_errors
     def burn_in(self, gamma_params, weight_params):
         """
         This function preforms the burn in part of the MCMC algorithm that will get the 
@@ -532,6 +662,7 @@ class bayes(object):
             weight_params = weight_params_p
         return gamma_params, weight_params
 
+    @handle_errors
     def monte_carlo(self, gamma_params, weight_params):
         """
         This function preforms the full MCMC algorithm. The parameters accepted in this part
@@ -564,6 +695,7 @@ class bayes(object):
             weight_params = weight_params_p
         return gamma_params, weight_params
 
+    @handle_errors
     def posterior(self):
         """
         A master function that executes burn in and monte carlo algorithms while
@@ -606,6 +738,7 @@ class bayes(object):
             samples_weight[:, i] = weight_params
         return samples_gamma, samples_weight
 
+    @handle_errors
     def bic(self):
         """
         This function calculates the Bayesian Information Criteria for
@@ -636,6 +769,7 @@ class bayes(object):
         b = np.log(self.n) * (len(self.mixed) * 2 - 1) - 2 * (self.L(gamma_params, weight_params))
         return b
 
+    @handle_errors
     def powerlawpdf(self, final_gamma, xmin=None):
         """
         The power law probability function for generating the best fit curve.
@@ -665,6 +799,7 @@ class bayes(object):
 
         return xp, yp
 
+    @handle_errors
     def plot_fit(self,
                  gamma_mean,
                  data_label=None,
@@ -717,6 +852,41 @@ class bayes(object):
         None.
 
         """
+
+        check(isinstance(gamma_mean,(int,float)) and type(gamma_mean)!=bool,
+                'gamma_mean input must be int or float')
+
+        check(gamma_mean > 1.0,
+                'gamma_mean input = %s, must be > 1.0' % gamma_mean)
+
+        check(isinstance(data_label,str) or data_label==None,
+                'data_label must be a string')
+
+        check(isinstance(scatter_size,(int,float)) and type(scatter_size)!=bool,
+                'scatter_size must be int or float')
+        
+        check(scatter_size>0,
+                'scatter_size input = %s, must be > 0' % scatter_size)
+
+        check(isinstance(line_width,(int,float)) and type(line_width)!=bool,
+                'line_width must be int or float')
+
+        check(line_width>0,
+                'line_width input = %s, must be > 0' % line_width)
+
+        check(isinstance(fit,bool),
+                'fit input must be bool. Default is True. Choose false if do not want to plot a fit')
+
+        check(isinstance(log,bool),
+                'log input must be bool. Default is True. Choose false if want to plot on regular scale')
+
+        check((isinstance(xmin,(int,float)) and type(xmin)!=bool) or xmin==None,
+                'xmin input must be int,float or None')
+        if xmin!=None:
+            check(xmin>=1,
+                    'xmin input = %s, must be > 1 if not None' % xmin)
+        
+
         if self.discrete:
             unique, counts = np.unique(self.data, return_counts=True)
             frequency = counts / np.sum(counts)
@@ -738,6 +908,7 @@ class bayes(object):
             plt.plot(X, Y, color=fit_color, linewidth=line_width)
         return
 
+    @handle_errors
     def plot_prior(self, color=None, label=None):
         """
         Function for plotting prior for gammas.
@@ -757,9 +928,11 @@ class bayes(object):
         None.
 
         """
+
         plt.plot(self.gammas, self.prior_gamma, color=color, label=label)
         return
 
+    @handle_errors
     def plot_posterior(self, samples, bins=100, alpha=None, color=None, label=None, range=None, normed=True):
         """
         Function for plotting posterior histogram.
@@ -793,6 +966,13 @@ class bayes(object):
         None.
 
         """
+
+        check(type(samples)==np.ndarray,
+                'samples input must be a 1-dimensional array')
+        
+        check(len(samples)>=100,
+                'your samples array length = %s, your posterior array is likely multidimensional. Posterior from bayes function is returned multidimensional. Try indexing. Eg. fit.gamma_posterior[0].' %len(samples))
+
 
         plt.hist(samples, bins, alpha=alpha, color=color,
                  label=label, range=range, normed=normed)
@@ -844,7 +1024,7 @@ class maxLikelihood(object):
         (1D array)
 
     """
-
+    @handle_errors
     def __init__(self,
                  data,
                  initial_guess=[1, 6, 10],
@@ -852,39 +1032,91 @@ class maxLikelihood(object):
                  xmax=None,
                  discrete=True):
 
-        self.data = np.array(data)
-        assert len(self.data)>0, "your data input is empty"
-        assert type(self.data[0])!=np.str_, "data input must only contain positive integers or floats, not strings"
-        assert np.sum(self.data<=0)==0, "data input values must be larger than 0"
-        if len(np.unique(self.data))==len(self.data) and discrete==True:
-            warnings.warn('ATTENTION, it appears you are fitting continuous data with discrete option. Consider using "discrete=False"', Warning)
+        self.data = np.array(list(data))
+        self.discrete = discrete
 
+        self.initial_guess = initial_guess
+
+        self._input_checks()
 
         #xmin
         if xmin is None:
-            self.xmin = min(self.data)
+            self.xmin = min(self.data).astype(float)
         else:
             self.xmin = xmin
-            assert type(self.xmax)==int or type(self.xmax)==float,"xmax must be a number or a float"
-            assert self.xmax>self.xmin, "xmax must be larger than xmin"
 
+        #xmax
         if xmax is None:
-            self.xmax = max(self.data) + 10.0
+            self.xmax = (max(self.data)+10).astype(float)
         else:
-            self.xmax = xmax
-            assert type(self.xmax)==int or type(self.xmax)==float,"xmax must be a number or a float"
-            assert self.xmax>self.xmin, "xmax must be larger than xmin"
+            self.xmax=xmax
+
+        self._xminmax_check()
 
         if self.xmin > 1 or self.xmax != np.infty:
             self.data = self.data[(self.data >= self.xmin)
                                   & (self.data <= self.xmax)]
         self.n = len(self.data)
         self.constant = np.sum(np.log(self.data)) / self.n
-        self.discrete = discrete
-        assert type(self.discrete)==bool, "discrete must be boolean type. Choose false if data is continuous"
+        
         self.initial_guess = np.linspace(
-            initial_guess[0], initial_guess[1], initial_guess[2])
+            self.initial_guess[0], self.initial_guess[1], self.initial_guess[2])
 
+    def _input_checks(self):
+
+        check(len(self.data) > 0,
+                'data input length = %s, must be > 0' % len(self.data))
+
+        check(self.data.dtype=='int64' or self.data.dtype=='float64',
+                'Your data contains non-numbers, data input must only contain positive integers or floats')
+
+        check(np.sum(self.data<=0)==0,
+                "your data input contains non-positive values, all values must be positive")
+
+        check(isinstance(self.discrete,bool),
+                'discrete input must be bool. Default is True. Choose False if data is continuous') 
+
+        check(len(self.initial_guess)==3,
+                'length of initial_guess input = %s, length must be 3' %len(self.initial_guess))
+
+        check(isinstance(self.initial_guess[0],(int,float)) and isinstance(self.initial_guess[1],(int,float)),
+                'lower [0] and upper [1] guess range inputs must be int or float')
+
+        check(isinstance(self.initial_guess[2],(int)),
+                'number of guesses [2] range must be int')
+
+        check(self.initial_guess[0]>=1,
+                'lower guess range initial_guess[0] = %s, must be > 1' %self.initial_guess[0])
+
+        check(self.initial_guess[0]<self.initial_guess[1],
+                'lower guess range initial_guess[0] must be lower than upper guess range initial_guess[1]')
+
+        check(self.initial_guess[2]>0,
+                'number of guesses initial_guess[2] = %s, must be > 0' %self.initial_guess[2])
+        
+
+    def _xminmax_check(self):
+
+        check(isinstance(self.xmin,(int,float)),
+                'Xmin must be int or float')
+
+        check(type(self.xmin)!=bool,
+                'Xmin is bool, must be int or float')
+
+        check(self.xmin>0, 
+                'Xmin input = %s, must be > 0' % self.xmin)
+        
+        check(isinstance(self.xmax,(int,float)),
+                'Xmax must be int or float')
+        
+        check(type(self.xmax)!=bool,
+                'Xmaxn is bool, must be int or float')
+
+        check(self.xmax>self.xmin,
+                'xmin is larger than xmax, must be xmin<xmax'
+                )
+
+    @handle_errors
     def Z(self, gamma):
         """
         Partition function Z for discrete and continuous powerlaw distributions.
@@ -916,6 +1148,7 @@ class maxLikelihood(object):
                 (self.xmin**(-gamma + 1) / (1 - gamma))
         return s
 
+    @handle_errors
     def F(self, gamma):
         """The optimization function. 
         
@@ -935,6 +1168,7 @@ class maxLikelihood(object):
         Z_prime = (self.Z(gamma + h) - self.Z(gamma - h)) / (2 * h)
         return (Z_prime / self.Z(gamma)) + self.constant
 
+    @handle_errors
     def Guess(self):
         """
         Master function that performs Newton-Raphson algorithm and determins best
@@ -974,7 +1208,7 @@ class maxLikelihood(object):
         return best_guess
 
 
-
+@handle_errors
 def power_law(exponents, weights, xmax, sample_size, xmin=1, discrete=True):
     """This function simulates a dataset that follows a powerlaw
     distribution with a given exponent and xmax.
