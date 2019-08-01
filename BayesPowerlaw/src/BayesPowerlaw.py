@@ -1276,7 +1276,7 @@ def demo():
 
     import os
     example_dir = os.path.dirname(__file__)
-    example = 'examples/scripts/tweets.py'
+    example = '../examples/scripts/tweets.py'
     file_name = '%s/%s' % (example_dir, example)
     with open(file_name, 'r') as f:
         content = f.read()
